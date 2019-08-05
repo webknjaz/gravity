@@ -315,7 +315,7 @@ def assemble_collections(spec, args):
             for plugin in spec[coll][plugin_type].keys():
 
                 # TODO: currently requires 'full name of file', but should work w/o extension?
-                src = os.path.join(args.basedir, base, plugin)
+                src = os.path.join(args.vardir, base, plugin)
                 dst = os.path.join(tldr, os.path.basename(plugin))
 
                 # create and read copy for modifycation
@@ -360,7 +360,7 @@ def copy_tests(plugin, coll, spec, args):
     if not os.path.exists(dst):
         os.makedirs(dst)
     for uf in spec['units']:  # TODO: should we rely on spec or 'autofind' matching units of same name/type?
-        fuf = os.path.join(args.basedir, 'test', 'units', uf)
+        fuf = os.path.join(args.vardir, 'test', 'units', uf)
         if os.path.isdir(fuf):
             #import epdb; epdb.st()
 
@@ -418,7 +418,7 @@ def copy_tests(plugin, coll, spec, args):
             if not os.path.exists(dst):
                 os.makedirs(dst)
             for uf in v['targets']:
-                fuf = os.path.join(args.basedir, 'test', 'integration', 'targets', uf)
+                fuf = os.path.join(args.vardir, 'test', 'integration', 'targets', uf)
                 duf = os.path.join(dst, os.path.basename(fuf))
                 if not os.path.exists(os.path.join(dst, os.path.basename(fuf))):
                     try:
