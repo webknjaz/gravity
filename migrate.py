@@ -163,6 +163,7 @@ def rewrite_doc_fragments(pdata, coll, spec, args):
 
     for fragment in docs.get('extends_documentation_fragment', []):
         print('ignoring %s fragment, needs rewrite' % fragment)
+
     # TODO: this incorrectly assumed single fragment/string, when it is a list
     # extends_documentation_fragment: vmware.documentation\n'
     #    newfrag = '%s.%s.%s' % (args.namespace, coll, fragment)
@@ -170,6 +171,8 @@ def rewrite_doc_fragments(pdata, coll, spec, args):
     #        'extends_documentation_fragment: ' + df,
     #        'extends_documentation_fragment: ' + ddf,
     #    )
+
+        #TODO: update gdata if fragment is in diff collection
 
 
 def rewrite_mod_utils(pdata, coll, spec, args):
@@ -186,6 +189,8 @@ def rewrite_mod_utils(pdata, coll, spec, args):
         if token in x:  # TODO actually lookup part after token in spec to find 'correct collection'
             exchange = 'ansible_collections.%s.%s.plugins.module_utils.' % (args.namespace, coll)
             newx = x.replace(token, exchange)
+
+            #TODO: update gdata if module_util is in diff collection
 
             # now handle line length rules
             if len(newx) < 160 and ('(' not in x) and '\\' not in x:
@@ -274,7 +279,7 @@ def assemble_collections(spec, args):
         if not os.path.exists(cdir):
             os.makedirs(cdir)
 
-        # create the galaxy.yml
+        # create the data for galaxy.yml
         gdata = {
             'namespace': args.namespace,
             'name': coll,
@@ -289,6 +294,7 @@ def assemble_collections(spec, args):
             'homepage': None,
             'issues': None
         }
+
         # loop per plugin type in collection
         for plugin_type in spec[coll].keys():
 
