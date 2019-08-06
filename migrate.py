@@ -463,11 +463,11 @@ def copy_tests(plugin, coll, spec, args):
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument(['-s', '--spec', ['--spec_file'], required=True, dest='spec_file',
+    parser.add_argument(['-s', '--spec', '--spec_file'], required=True, dest='spec_file',
                         help='spec YAML file that describes how to organize collections')
     parser.add_argument(['-n', '--ns', '--namespace'], dest='namespace', default=COLLECTION_NAMESPACE,
                         help='target namespace for resulting collections')
-    parser.add_argument(['-r', '--refresch'], action='store_true', dest='refresh', default=False
+    parser.add_argument(['-r', '--refresh'], action='store_true', dest='refresh', default=False
                         help='force refreshing local Ansible checkout')
     parser.add_argument(['-t', '--target-dir'], dest='vardir', default=VARDIR,
                         help='target directory for resulting collections and rpm')
