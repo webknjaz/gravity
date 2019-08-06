@@ -173,7 +173,7 @@ def rewrite_doc_fragments(pdata, coll, spec, args):
     #        'extends_documentation_fragment: ' + ddf,
     #    )
 
-        #TODO: update gdata if fragment is in diff collection
+        #TODO: update gdata.requirements if fragment is in diff collection
 
 
 def rewrite_mod_utils(pdata, coll, spec, args):
@@ -191,7 +191,7 @@ def rewrite_mod_utils(pdata, coll, spec, args):
             exchange = 'ansible_collections.%s.%s.plugins.module_utils.' % (args.namespace, coll)
             newx = x.replace(token, exchange)
 
-            #TODO: update gdata if module_util is in diff collection
+            #TODO: update gdata.requirements if module_util is in diff collection
 
             # now handle line length rules
             if len(newx) < 160 and ('(' not in x) and '\\' not in x:
@@ -294,6 +294,7 @@ def assemble_collections(spec, args):
             'documentation': None,
             'homepage': None,
             'issues': None
+            'requirements': ''
         }
 
         # loop per plugin type in collection
