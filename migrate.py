@@ -1,7 +1,6 @@
 #!/usr/bin/env python
 
 import argparse
-import json
 import glob
 import os
 import shutil
@@ -11,12 +10,7 @@ import yaml
 
 from collections.abc import Mapping
 
-
-import requests
-
-from bs4 import BeautifulSoup
 from logzero import logger
-from sh import find as shfind
 
 
 DEVEL_URL = 'https://github.com/ansible/ansible.git'
