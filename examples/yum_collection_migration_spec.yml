@@ -2,39 +2,39 @@
 
 yum_collection:
   action:
-    yum.py
+    - yum.py
   module_utils:
-    yumdnf.py
+    - yumdnf.py
   modules:
-    packaging/os/yum.py
+    - packaging/os/yum.py
   units:
-    test_yum.py
+    - test_yum.py
   targets:
-    yum
+    - yum
 
   # adding more to test the rest of plugin types
   # missing networking ones for now
   become:
-    sudo.py
+    - sudo.py
   cache:
-    memcached.py
+    - memcached.py
   callback:
-    default.py
+    - default.py
   connection:
-    local.py
+    - local.py
   docs_fragments:
-    shell_common.py
+    - shell_common.py
   filter:
-    core.py
+    - core.py
   inventory:
-    ini.py
+    - ini.py
   lookup:
-    env.py
+    - env.py
   test:
-    core.py
+    - core.py
   shell:
-    sh.py
+    - sh.py
   strategy:
-    free.py
-    linear.py
+    - free.py
+    - linear.py
   # vars: https://github.com/ansible/ansible/issues/59997
