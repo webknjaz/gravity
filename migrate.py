@@ -60,8 +60,8 @@ def run_command(cmd=None, check_rc=True):
     }
 
 
-def checkout_repo(refresh=False):
-    releases_dir = os.path.join(VARDIR, 'releases')
+def checkout_repo(vardir=VARDIR, refresh=False):
+    releases_dir = os.path.join(vardir, 'releases')
     devel_path = os.path.join(releases_dir, 'devel.git')
 
     if refresh and os.path.exists(devel_path):
@@ -262,91 +262,90 @@ def rewrite_mod_utils(pdata, coll, spec, args):
 
 
 def assemble_collections(spec, args):
-    releasedir = os.path.join(args.vardir, 'releases')
-    colbasedir = os.path.join(args.vardir, 'collections')
-    metadir = os.path.join(args.vardir, 'meta')
+    # NOTE releases_dir is already created by checkout_repo(), might want to move all that to something like ensure_dirs() ...
+    releases_dir = os.path.join(args.vardir, 'releases')
+    collections_base_dir = os.path.join(args.vardir, 'collections')
+    meta_dir = os.path.join(args.vardir, 'meta')
 
-    if args.refresh and os.path.exists(colbasedir):
-        shutil.rmtree(colbasedir)
+    if args.refresh and os.path.exists(collections_base_dir):
+        shutil.rmtree(collections_base_dir)
 
-    # loop over specified collections
-    for coll in spec.keys():
+    for collection in spec.keys():
 
-        requirements = set()
-        cdir = os.path.join(colbasedir, 'ansible_collections', coll)
+        #requirements = set()
+        collection_dir = os.path.join(collections_base_dir, 'ansible_collections', args.namespace, collection)
 
-        if args.refresh and os.path.exists(cdir):
-            shutil.rmtree(cdir)
-        if not os.path.exists(cdir):
-            os.makedirs(cdir)
+        if args.refresh and os.path.exists(collection_dir):
+            shutil.rmtree(collection_dir)
+
+        if not os.path.exists(collection_dir):
+            os.makedirs(collection_dir)
 
         # create the data for galaxy.yml
-        gdata = {
-            'namespace': args.namespace,
-            'name': coll,
-            'version': '1.0.0',  # TODO: add to spec, args?
-            'authors': None,
-            'description': None,
-            'license': None,
-            'tags': None,
-            'dependencies': None,
-            'repository': None,
-            'documentation': None,
-            'homepage': None,
-            'issues': None
-            'requirements': ''
-        }
+        #gdata = {
+        #    'namespace': args.namespace,
+        #    'name': coll,
+        #    'version': '1.0.0',  # TODO: add to spec, args?
+        #    'authors': None,
+        #    'description': None,
+        #    'license': None,
+        #    'tags': None,
+        #    'dependencies': None,
+        #    'repository': None,
+        #    'documentation': None,
+        #    'homepage': None,
+        #    'issues': None
+        #    'requirements': ''
+        #}
 
-        # loop per plugin type in collection
-        for plugin_type in spec[coll].keys():
+        for plugin_type in spec[collection].keys():
 
             # get right plugin path
             if plugin_type not in PLUGIN_EXCEPTION_PATHS:
-                base = os.path.join('lib', 'ansible', plugin_type)
+                src_plugin_base = os.path.join('lib', 'ansible', 'plugins', plugin_type)
             else:
-                base = PLUGIN_EXCEPTION_PATHS[plugin_type]
+                src_plugin_base = PLUGIN_EXCEPTION_PATHS[plugin_type]
 
             # ensure destinations exist
-            tldr = os.path.join(cidr, base)
-            if not os.path.exists(tldr):
-                os.makedirs(tldr)
-                with open(os.path.join(tldr, '__init__.py'), 'w') as f:
+            dest_plugin_base = os.path.join(collection_dir, 'plugins', plugin_type)
+            if not os.path.exists(dest_plugin_base):
+                os.makedirs(dest_plugin_base)
+                with open(os.path.join(dest_plugin_base, '__init__.py'), 'w') as f:
                     f.write('')
 
-            # now actually process each plugin
-            for plugin in spec[coll][plugin_type].keys():
-
+            # process each plugin
+            for plugin in spec[collection][plugin_type]:
                 # TODO: currently requires 'full name of file', but should work w/o extension?
-                src = os.path.join(args.vardir, base, plugin)
-                dst = os.path.join(tldr, os.path.basename(plugin))
-
-                # create and read copy for modifycation
-                shutil.copy(src, dst)
-                with open(dst, 'r') as f:
-                    pdata = f.read()
-                _pdata = pdata[:]
+                src = os.path.join(releases_dir, DEVEL_BRANCH + '.git', src_plugin_base, plugin)
+                dest = os.path.join(dest_plugin_base, os.path.basename(plugin))
+                # create and read copy for modification
+                # FIXME copy or move
+                shutil.copy(src, dest)
+                #with open(dst, 'r') as f:
+                #    pdata = f.read()
+                #_pdata = pdata[:]
 
                 # were any lines nullified?
-                extralines = False
+                #extralines = False
 
-                rewrite_mod_utils(pdata, coll, spec, args)
-                rewrite_doc_fragments(pdata, coll, spec, args)
+                #rewrite_mod_utils(pdata, coll, spec, args)
+                #rewrite_doc_fragments(pdata, coll, spec, args)
 
                 # clean too many empty lines
-                if extralines:
-                    data = clean_extra_lines(data)
+                #if extralines:
+                #    data = clean_extra_lines(data)
 
-                if data != _data:
-                    logger.info('fixing imports in %s' % dst)
-                    with open(dst, 'w') as f:
-                        f.write(data)
+                #if data != _data:
+                #    logger.info('fixing imports in %s' % dst)
+                #    with open(dst, 'w') as f:
+                #        f.write(data)
 
                 # process unit tests TODO: sanity? , integration?
-                copy_unit_tests(plugin, coll, spec, args)
+                #copy_unit_tests(plugin, coll, spec, args)
 
         # write collection metadata
-        with open(os.path.join(cdir, 'galaxy.yml'), 'w') as f:
-            f.write(yaml.dump(gdata, default_flow_style=False))
+        #with open(os.path.join(cdir, 'galaxy.yml'), 'w') as f:
+        #    f.write(yaml.dump(gdata, default_flow_style=False))
 
 
 def copy_tests(plugin, coll, spec, args):
@@ -479,7 +478,7 @@ def main():
     # required, so we should always have
     spec = load_spec_file(args.spec_file)
 
-    checkout_repo(args.refresh)
+    checkout_repo(args.vardir, args.refresh)
 
     # doeet
     assemble_collections(spec, args)
