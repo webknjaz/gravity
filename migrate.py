@@ -4,17 +4,18 @@ import argparse
 import json
 import glob
 import os
-import requests
 import shutil
 import subprocess
 import sys
 import yaml
 
+from collections.abc import Mapping
+
+
+import requests
+
 from bs4 import BeautifulSoup
-from collections import Mapping
 from logzero import logger
-from sh import createrepo
-from sh import git
 from sh import find as shfind
 
 
@@ -27,6 +28,53 @@ COLLECTION_PACKAGE_PREFIX = 'ansible-collection-'
 COLLECTION_INSTALL_PATH = '/usr/share/ansible/collections/ansible_collections'
 
 PLUGIN_EXCEPTION_PATHS = {'modules': 'lib/ansible/modules', 'module_utils': 'lib/ansible/module_utils'}
+
+
+def _run_command(cmd=None, check_rc=True):
+    logger.debug(cmd)
+    if not isinstance(cmd, bytes):
+        cmd = cmd.encode('utf-8')
+    p = subprocess.Popen(
+        cmd,
+        shell=True,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE
+    )
+    (so, se) = p.communicate()
+
+    if check_rc and p.returncode != 0:
+        raise RuntimeError(se)
+
+    so = so.decode('utf-8')
+    se = se.decode('utf-8')
+
+    return (p.returncode, so, se)
+
+
+def run_command(cmd=None, check_rc=True):
+    (rc, so, se) = _run_command(cmd, check_rc)
+    return {
+        'rc': rc,
+        'so': so,
+        'se': se
+    }
+
+
+def checkout_repo(refresh=False):
+    releases_dir = os.path.join(VARDIR, 'releases')
+    devel_path = os.path.join(releases_dir, 'devel.git')
+
+    if refresh and os.path.exists(devel_path):
+        # TODO do we want/is it worth to use a git library instead?
+        cmd = 'cd %s; git checkout %s; git pull' % (devel_path, DEVEL_BRANCH)
+        rc, stdout, stderr = _run_command(cmd)
+
+    if not os.path.exists(releases_dir):
+        os.makedirs(releases_dir)
+
+    if not os.path.exists(devel_path):
+        cmd = 'git clone %s %s; cd %s; git checkout %s' % (DEVEL_URL, devel_path, devel_path, DEVEL_BRANCH)
+        rc, stdout, stderr = _run_command(cmd)
 
 
 def load_spec_file(spec_file):
@@ -100,53 +148,6 @@ def clean_extra_lines(rawtext):
 
     rawtext = '\n'.join(lines)
     return rawtext
-
-
-def _run_command(cmd):
-    logger.debug(cmd)
-    if not isinstance(cmd, bytes):
-        cmd = cmd.encode('utf-8')
-    p = subprocess.Popen(
-        cmd,
-        shell=True,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE
-    )
-    (so, se) = p.communicate()
-    so = so.decode('utf-8')
-    se = se.decode('utf-8')
-
-    return (p.returncode, so, se)
-
-
-def run_command(cmd=None):
-    (rc, so, se) = _run_command(cmd)
-    return {
-        'rc': rc,
-        'so': so,
-        'se': se
-    }
-
-
-def get_releases(refresh=False):
-
-    cachedir = os.path.join(VARDIR, 'releases')
-    if not os.path.exists(cachedir):
-        os.makedirs(cachedir)
-
-    # make a devel checkout
-    dpath = os.path.join(cachedir, 'devel.git')
-    cmd = 'git clone %s %s' % (DEVEL_URL, dpath)
-    logger.info(cmd)
-    if not os.path.exists(dpath):
-        git.clone(DEVEL_URL, dpath)
-    if DEVEL_BRANCH:
-        (rc, so, se) = _run_command('cd %s; git branch | egrep --color=never ^\\* | head -n1' % dpath)
-        thisbranch = so.replace('*', '').strip()
-        if thisbranch != DEVEL_BRANCH:
-            logger.debug('%s != %s' % (thisbranch, DEVEL_BRANCH))
-            (rc, so, se) = _run_command('cd %s; git checkout %s' % (dpath, DEVEL_BRANCH))
-            assert rc == 0
 
 
 def rewrite_doc_fragments(pdata, coll, spec, args):
@@ -356,7 +357,7 @@ def copy_tests(plugin, coll, spec, args):
     # UNIT TESTS
     # need to fix these imports in the unit tests
 
-    dst = os.path.join(plugindst?, 'test', 'unit')
+    dst = os.path.join(plugin, 'test', 'unit')
     if not os.path.exists(dst):
         os.makedirs(dst)
     for uf in spec['units']:  # TODO: should we rely on spec or 'autofind' matching units of same name/type?
@@ -463,19 +464,21 @@ def copy_tests(plugin, coll, spec, args):
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument(['-s', '--spec', '--spec_file'], required=True, dest='spec_file',
+    parser.add_argument('-s', '--spec', '--spec_file', required=True, dest='spec_file',
                         help='spec YAML file that describes how to organize collections')
-    parser.add_argument(['-n', '--ns', '--namespace'], dest='namespace', default=COLLECTION_NAMESPACE,
+    parser.add_argument('-n', '--ns', '--namespace', dest='namespace', default=COLLECTION_NAMESPACE,
                         help='target namespace for resulting collections')
-    parser.add_argument(['-r', '--refresh'], action='store_true', dest='refresh', default=False
+    parser.add_argument('-r', '--refresh', action='store_true', dest='refresh', default=False,
                         help='force refreshing local Ansible checkout')
-    parser.add_argument(['-t', '--target-dir'], dest='vardir', default=VARDIR,
+    parser.add_argument('-t', '--target-dir', dest='vardir', default=VARDIR,
                         help='target directory for resulting collections and rpm')
 
     args = parser.parse_args()
 
     # required, so we should always have
     spec = load_spec_file(args.spec_file)
+
+    checkout_repo(args.refresh)
 
     # doeet
     assemble_collections(spec, args)
