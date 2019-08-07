@@ -397,6 +397,20 @@ vyos:
 #cyberark:
 #alicloud:
 amazon:
+    module_utils:
+    - ec2.py
+    - aws/batch.py
+    - aws/cloudfront_facts.py
+    - aws/core.py
+    - aws/direct_connect.py
+    - aws/elb_utils.py
+    - aws/elbv2.py
+    - aws/iam.py
+    - aws/rds.py
+    - aws/s3.py
+    - aws/urls.py
+    - aws/waf.py
+    - aws/waiters.py
     modules:
     - cloud/amazon/_aws_acm_facts.py
     - cloud/amazon/_aws_az_facts.py
