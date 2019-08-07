@@ -7,10 +7,6 @@ yum_collection:
     - yumdnf.py
   modules:
     - packaging/os/yum.py
-  units:
-    - test_yum.py
-  targets:
-    - yum
 
   # adding more to test the rest of plugin types
   # missing networking ones for now
@@ -22,7 +18,7 @@ yum_collection:
     - default.py
   connection:
     - local.py
-  docs_fragments:
+  doc_fragments:
     - shell_common.py
   filter:
     - core.py
