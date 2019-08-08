@@ -334,14 +334,10 @@ def assemble_collections(spec, args):
                 seen.append(plugin_sig)
 
                 # TODO: currently requires 'full name of file', but should work w/o extension?
-                src = os.path.join(releases_dir, DEVEL_BRANCH + '.git', src_plugin_base, plugin)
+                src = Path(releases_dir) / f'{DEVEL_BRANCH}.git' / src_plugin_base / plugin
                 dst = Path(dest_plugin_base) / os.path.basename(plugin)
 
-                # create and read copy for modification
-                # FIXME copy or move
-                shutil.copy(src, dst)
-
-                plugin_data = dst.read_text()
+                plugin_data = src.read_text()
                 plugin_data_new = plugin_data[:]
 
                 # were any lines nullified?
@@ -360,8 +356,8 @@ def assemble_collections(spec, args):
                         # FIXME hardcoded version
                         galaxy_metadata['dependencies'][dep_collection] = '>=1.0'
                     logger.info('rewriting plugin references in %s' % dest)
-                    with open(dest, 'w') as f:
-                        f.write(plugin_data_new)
+
+                dst.write_text(plugin_data_new)
 
                 # process unit tests TODO: sanity? , integration?
                 #copy_unit_tests(plugin, collection, spec, args)
