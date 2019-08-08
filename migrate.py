@@ -17,10 +17,7 @@ DEVEL_URL = 'https://github.com/ansible/ansible.git'
 DEVEL_BRANCH = 'devel'
 
 VARDIR = os.environ.get('GRAVITY_VAR_DIR', '.cache')
-COLLECTION_NAMESPACE = 'ansible-collection'
-COLLECTION_PACKAGE_PREFIX = 'ansible-collection-'
-COLLECTION_INSTALL_PATH = '/usr/share/ansible/collections/ansible_collections'
-
+COLLECTION_NAMESPACE = 'ansible_collection'
 PLUGIN_EXCEPTION_PATHS = {'modules': 'lib/ansible/modules', 'module_utils': 'lib/ansible/module_utils'}
 
 
