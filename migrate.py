@@ -12,6 +12,8 @@ from collections.abc import Mapping
 
 from logzero import logger
 
+import redbaron
+
 
 DEVEL_URL = 'https://github.com/ansible/ansible.git'
 DEVEL_BRANCH = 'devel'
@@ -186,89 +188,47 @@ def rewrite_doc_fragments(plugin_data, collection, spec, args):
     return plugin_data, deps
 
 
-def rewrite_mod_utils(pdata, coll, spec, args):
-    # ansible.module_utils.
-    token = 'ansible.module_utils.'
+def rewrite_imports(mod_src_text, coll, spec, namespace):
+    """Rewrite imports map."""
+    plugins_path = ('ansible_collections', namespace, coll, 'plugins')
+    import_map = {
+        ('ansible', 'module_utils'): plugins_path + ('module_utils', ),
+        ('ansible', 'plugins'): plugins_path,
+    }
 
-    # TODO: this assumes the module_utils resides in the same collection, must use spec to find actual collection
-    # and then both rewrite import AND add collection to depenencies of current collection.
-    # ansible_collections.jctanner.cloud_vmware.module_utils.
-    dlines = pdata.split('\n')
-    for idx, x in enumerate(dlines):
-        if not x.startswith('from '):
+    mod_fst = redbaron.RedBaron(mod_src_text)
+    for old_imp, new_imp in import_map.items():
+        mod_fst = rewrite_imports_in_fst(mod_fst, old_imp, new_imp)
+    return mod_fst.dumps()
+
+
+def rewrite_imports_in_fst(mod_fst, token, exchange):
+    """Replace imports in the python module FST."""
+    for imp in (ml for ml in mod_fst if ml.type in {'import', 'from_import'}):
+        imp_src = imp.value
+        if imp.type == 'import':
+            imp_src = imp_src[0].value
+
+        # TODO: this assumes the module_utils resides in the same
+        # collection, must use spec to find actual collection and then
+        # both rewrite import AND add collection to depenencies of
+        # current collection.
+        # ansible_collections.jctanner.cloud_vmware.module_utils.
+        # TODO: update gdata.requirements if module_util is in diff
+        # collection
+        token_length = len(token)
+        if tuple(t.value for t in imp_src[:token_length]) != token:
             continue
-        if token in x:  # TODO actually lookup part after token in spec to find 'correct collection'
-            exchange = 'ansible_collections.%s.%s.plugins.module_utils.' % (args.namespace, coll)
-            newx = x.replace(token, exchange)
+        # TODO: actually lookup part after token in spec to find
+        # 'correct collection'
 
-            #TODO: update gdata.requirements if module_util is in diff collection
+        if len(imp.targets.find_all('name_as_name', value='g:*Base')) > 0:
+            continue  # Skip imports of Base classes
 
-            # now handle line length rules
-            if len(newx) < 160 and ('(' not in x) and '\\' not in x:
-                dlines[idx] = newx
-                continue
-
-            if '(' in x and ')' not in x:
-                x = ''
-                tonull = []
-                for thisx in range(idx, len(mdlines)):
-                    x += dlines[thisx]
-                    tonull.append(thisx)
-                    if ')' in dlines[thisx]:
-                        break
-
-                if len(tonull) > 1:
-                    extralines = True
-                for tn in tonull:
-                    dlines[tn] = ''
-
-            if '\\' in x:
-                x = ''
-                tonull = []
-                for thisx in range(idx, len(dlines)):
-
-                    if thisx != idx and dlines[thisx].startswith('from '):
-                        break
-
-                    print('add %s' % dlines[thisx])
-                    x += dlines[thisx]
-                    tonull.append(thisx)
-
-                    if thisx != idx and (not dlines[thisx].strip() or dlines[thisx][0].isalnum()):
-                        break
-                    print('add %s' % dlines[thisx])
-
-                if len(tonull) > 1:
-                    extralines = True
-                for tn in tonull:
-                    dlines[tn] = ''
-
-            # we have to use newlined imports for those that are >160 chars
-            ximports = x[:]
-
-            #if '(' in x and ')' not in x:
-            #    import epdb; epdb.st()
-
-            if si in ximports:
-                ximports = ximports.replace(token, '')
-            elif di in ximports:
-                ximports = ximports.replace(exchange, '')
-            ximports = ximports.replace('from', '')
-            ximports = ximports.replace('import', '')
-            ximports = ximports.replace('\\', '')
-            ximports = ximports.replace('(', '')
-            ximports = ximports.replace(')', '')
-            ximports = ximports.split(',')
-            ximports = [x.strip() for x in ximports if x.strip()]
-            ximports = sorted(set(ximports))
-
-            newx = 'from %s import (\n' % exchange
-            for xi in ximports:
-                newx += '    ' + xi + ',\n'
-            newx += ')'
-            dlines[idx] = newx
-
-    return '\n'.join(dlines)
+        logger.debug(imp)
+        logger.debug(imp.targets.find_all('name_as_name', value='g:*Base'))
+        imp_src[:token_length] = exchange  # replace the import
+    return mod_fst
 
 
 def read_text_from_file(path):
@@ -352,7 +312,7 @@ def assemble_collections(spec, args):
                 # were any lines nullified?
                 #extralines = False
 
-                plugin_data_new = rewrite_mod_utils(plugin_data_new, collection, spec, args)
+                plugin_data_new = rewrite_imports(plugin_data_new, collection, spec, args.namespace)
                 plugin_data_new, docs_dependencies = rewrite_doc_fragments(plugin_data_new, collection, spec, args)
 
                 # clean too many empty lines
