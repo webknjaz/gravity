@@ -34,3 +34,7 @@ yum_collection:
     - free.py
     - linear.py
   # vars: https://github.com/ansible/ansible/issues/59997
+
+other_collection:
+  doc_fragments:
+    - default_callback.py
