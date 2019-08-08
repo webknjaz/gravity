@@ -280,6 +280,7 @@ def assemble_collections(spec, args):
     if args.refresh and os.path.exists(collections_base_dir):
         shutil.rmtree(collections_base_dir)
 
+    seen = []
     for collection in spec.keys():
 
         collection_dir = os.path.join(collections_base_dir, 'ansible_collections', args.namespace, collection)
@@ -291,7 +292,7 @@ def assemble_collections(spec, args):
             os.makedirs(collection_dir)
 
         # create the data for galaxy.yml
-        galaxy_metadata= {
+        galaxy_metadata = {
             'namespace': args.namespace,
             'name': collection,
             'version': '1.0.0',  # TODO: add to spec, args?
@@ -325,6 +326,12 @@ def assemble_collections(spec, args):
 
             # process each plugin
             for plugin in spec[collection][plugin_type]:
+                plugin_sig = '%s/%s' % (plugin_type, plugin)
+                if plugin_sig in seen:
+                    # FIXME print in which collection?
+                    raise Exception('Each plugin needs to be assigned to one collection only. %s has been already processed.' % plugin_sig)
+                seen.append(plugin_sig)
+
                 # TODO: currently requires 'full name of file', but should work w/o extension?
                 src = os.path.join(releases_dir, DEVEL_BRANCH + '.git', src_plugin_base, plugin)
                 dest = os.path.join(dest_plugin_base, os.path.basename(plugin))
