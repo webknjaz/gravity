@@ -178,9 +178,9 @@ def rewrite_doc_fragments(plugin_data, collection, spec, args):
     deps = []
     for fragment in doc_finder.fragments:
         fragment_collection = get_fragment_collection(fragment, spec)
-        deps.append(fragment_collection)
 
         if collection != fragment_collection:
+            deps.append(fragment_collection)
             # TODO what if it's in a different namespace (different spec)? do we care?
             new_fragment = '%s.%s.%s' % (args.namespace, fragment_collection, fragment)
             # TODO make sure to replace only in DOCUMENTATION
