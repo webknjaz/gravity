@@ -179,12 +179,14 @@ def rewrite_doc_fragments(plugin_data, collection, spec, args):
         fragment_collection = get_fragment_collection(fragment, spec)
 
         if collection != fragment_collection:
+            # TODO what if it's in a different namespace (different spec)? do we care?
             new_fragment = '%s.%s.%s' % (args.namespace, fragment_collection, fragment)
             # TODO make sure to replace only in DOCUMENTATION
             plugin_data = plugin_data.replace(fragment, new_fragment)
             # TODO: update gdata.requirements
 
     return plugin_data
+
 
 def rewrite_mod_utils(pdata, coll, spec, args):
     # ansible.module_utils.
