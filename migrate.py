@@ -144,30 +144,36 @@ def clean_extra_lines(rawtext):
     return rawtext
 
 
-def rewrite_doc_fragments(pdata, coll, spec, args):
+def rewrite_doc_fragments(plugin_data, collection, spec, args):
+    import ast
+    class DocFragmentFinderVisitor(ast.NodeVisitor):
+        def __init__(self):
+            self.fragments = []
 
-    # fix the docs fragments
-    # TODO: same issue than with module_utils, it assumes fragment resides in the same collection,
-    # must use spec to find actual collection and then both rewrite extends line AND add collection
-    # to depenencies of current collection.
+        def visit_Assign(self, node):
+            if type(node.value) != ast.Str:
+                return
+
+            for name in node.targets:
+                if getattr(name, 'id', '') == 'DOCUMENTATION':
+                    docs = node.value.s.strip('\n')
+                    docs_parsed = yaml.safe_load(docs)
+                    self.fragments = docs_parsed.get('extends_documentation_fragment', [])
 
     # TODO: use ansible-doc --json instead? plugin loader/docs directly?
-    parsed = safe_eval(data)
-    raw_docs = parsed.get('DOCUMENTATION')
-    docs = yaml.load(raw_docs)
 
-    for fragment in docs.get('extends_documentation_fragment', []):
-        print('ignoring %s fragment, needs rewrite' % fragment)
+    tree = ast.parse(plugin_data)
+    doc_finder = DocFragmentFinderVisitor()
+    doc_finder.visit(tree)
+    for fragment in doc_finder.fragments:
+        #print(fragment)
+        pass
 
-    # TODO: this incorrectly assumed single fragment/string, when it is a list
-    # extends_documentation_fragment: vmware.documentation\n'
-    #    newfrag = '%s.%s.%s' % (args.namespace, coll, fragment)
-    #    mdata = mdata.replace(
-    #        'extends_documentation_fragment: ' + df,
-    #        'extends_documentation_fragment: ' + ddf,
-    #    )
-
-        #TODO: update gdata.requirements if fragment is in diff collection
+        # if fragment in diff collection:
+            # TODO: add fqcn
+            #    newfrag = '%s.%s.%s' % (args.namespace, coll, fragment)
+            #    mdata = mdata.replace(oldfragment, newfragment)
+            # TODO: update gdata.requirements
 
 
 def rewrite_mod_utils(pdata, coll, spec, args):
@@ -312,27 +318,29 @@ def assemble_collections(spec, args):
                 # TODO: currently requires 'full name of file', but should work w/o extension?
                 src = os.path.join(releases_dir, DEVEL_BRANCH + '.git', src_plugin_base, plugin)
                 dest = os.path.join(dest_plugin_base, os.path.basename(plugin))
+
                 # create and read copy for modification
                 # FIXME copy or move
                 shutil.copy(src, dest)
-                #with open(dst, 'r') as f:
-                #    pdata = f.read()
-                #_pdata = pdata[:]
+
+                with open(dest, 'r') as f:
+                    plugin_data = f.read()
+                plugin_data_new = plugin_data[:]
 
                 # were any lines nullified?
                 #extralines = False
 
                 #rewrite_mod_utils(pdata, coll, spec, args)
-                #rewrite_doc_fragments(pdata, coll, spec, args)
+                rewrite_doc_fragments(plugin_data_new, collection, spec, args)
 
                 # clean too many empty lines
                 #if extralines:
                 #    data = clean_extra_lines(data)
 
-                #if data != _data:
-                #    logger.info('fixing imports in %s' % dst)
-                #    with open(dst, 'w') as f:
-                #        f.write(data)
+                #if plugin_data != plugin_data_new:
+                #    logger.info('rewriting plugin references in %s' % dest)
+                #    with open(dest, 'w') as f:
+                #        f.write(plugin_data_new)
 
                 # process unit tests TODO: sanity? , integration?
                 #copy_unit_tests(plugin, coll, spec, args)
