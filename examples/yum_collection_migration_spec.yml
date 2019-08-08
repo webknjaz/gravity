@@ -1,0 +1,40 @@
+# a draft of a spec file to migrate content from core to a collection, for test purposes
+
+yum_collection:
+  action:
+    - yum.py
+  module_utils:
+    - yumdnf.py
+  modules:
+    - packaging/os/yum.py
+
+  # adding more to test the rest of plugin types
+  # missing networking ones for now
+  become:
+    - sudo.py
+  cache:
+    - memcached.py
+  callback:
+    - default.py
+  connection:
+    - local.py
+  doc_fragments:
+    - shell_common.py
+  filter:
+    - core.py
+  inventory:
+    - ini.py
+  lookup:
+    - env.py
+  test:
+    - core.py
+  shell:
+    - sh.py
+  strategy:
+    - free.py
+    - linear.py
+  # vars: https://github.com/ansible/ansible/issues/59997
+
+other_collection:
+  doc_fragments:
+    - default_callback.py
