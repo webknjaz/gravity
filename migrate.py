@@ -355,7 +355,7 @@ def assemble_collections(spec, args):
                         dep_collection = '%s.%s' % (args.namespace, dep)
                         # FIXME hardcoded version
                         galaxy_metadata['dependencies'][dep_collection] = '>=1.0'
-                    logger.info('rewriting plugin references in %s' % dest)
+                    logger.info('rewriting plugin references in %s' % dst)
 
                 dst.write_text(plugin_data_new)
 
