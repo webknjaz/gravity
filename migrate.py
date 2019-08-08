@@ -370,6 +370,13 @@ def assemble_collections(spec, args):
         with open(os.path.join(collection_dir, 'galaxy.yml'), 'w') as f:
             f.write(yaml.dump(galaxy_metadata, default_flow_style=False))
 
+        subprocess.check_call(('git', 'init'), cwd=collection_dir)
+        subprocess.check_call(('git', 'add', '.'), cwd=collection_dir)
+        subprocess.check_call(
+            ('git', 'commit', '-m', 'Initial commit', '--allow-empty'),
+            cwd=collection_dir,
+        )
+
 
 def copy_tests(plugin, coll, spec, args):
 
