@@ -9,6 +9,7 @@ import sys
 import yaml
 
 from collections.abc import Mapping
+from pathlib import Path
 
 from logzero import logger
 
@@ -268,7 +269,7 @@ def rewrite_mod_utils(pdata, coll, spec, args):
             newx += ')'
             dlines[idx] = newx
 
-    data = '\n'.join(dlines)
+    return '\n'.join(dlines)
 
 
 def assemble_collections(spec, args):
@@ -334,20 +335,19 @@ def assemble_collections(spec, args):
 
                 # TODO: currently requires 'full name of file', but should work w/o extension?
                 src = os.path.join(releases_dir, DEVEL_BRANCH + '.git', src_plugin_base, plugin)
-                dest = os.path.join(dest_plugin_base, os.path.basename(plugin))
+                dst = Path(dest_plugin_base) / os.path.basename(plugin)
 
                 # create and read copy for modification
                 # FIXME copy or move
-                shutil.copy(src, dest)
+                shutil.copy(src, dst)
 
-                with open(dest, 'r') as f:
-                    plugin_data = f.read()
+                plugin_data = dst.read_text()
                 plugin_data_new = plugin_data[:]
 
                 # were any lines nullified?
                 #extralines = False
 
-                #rewrite_mod_utils(pdata, coll, spec, args)
+                plugin_data_new = rewrite_mod_utils(plugin_data_new, collection, spec, args)
                 plugin_data_new, docs_dependencies = rewrite_doc_fragments(plugin_data_new, collection, spec, args)
 
                 # clean too many empty lines
@@ -364,7 +364,7 @@ def assemble_collections(spec, args):
                         f.write(plugin_data_new)
 
                 # process unit tests TODO: sanity? , integration?
-                #copy_unit_tests(plugin, coll, spec, args)
+                #copy_unit_tests(plugin, collection, spec, args)
 
         # write collection metadata
         with open(os.path.join(collection_dir, 'galaxy.yml'), 'w') as f:
