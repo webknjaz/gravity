@@ -175,17 +175,18 @@ def rewrite_doc_fragments(plugin_data, collection, spec, args):
     doc_finder = DocFragmentFinderVisitor()
     doc_finder.visit(tree)
 
+    deps = []
     for fragment in doc_finder.fragments:
         fragment_collection = get_fragment_collection(fragment, spec)
+        deps.append(fragment_collection)
 
         if collection != fragment_collection:
             # TODO what if it's in a different namespace (different spec)? do we care?
             new_fragment = '%s.%s.%s' % (args.namespace, fragment_collection, fragment)
             # TODO make sure to replace only in DOCUMENTATION
             plugin_data = plugin_data.replace(fragment, new_fragment)
-            # TODO: update gdata.requirements
 
-    return plugin_data
+    return plugin_data, deps
 
 
 def rewrite_mod_utils(pdata, coll, spec, args):
@@ -284,7 +285,6 @@ def assemble_collections(spec, args):
 
     for collection in spec.keys():
 
-        #requirements = set()
         collection_dir = os.path.join(collections_base_dir, 'ansible_collections', args.namespace, collection)
 
         if args.refresh and os.path.exists(collection_dir):
@@ -294,21 +294,22 @@ def assemble_collections(spec, args):
             os.makedirs(collection_dir)
 
         # create the data for galaxy.yml
-        #gdata = {
-        #    'namespace': args.namespace,
-        #    'name': coll,
-        #    'version': '1.0.0',  # TODO: add to spec, args?
-        #    'authors': None,
-        #    'description': None,
-        #    'license': None,
-        #    'tags': None,
-        #    'dependencies': None,
-        #    'repository': None,
-        #    'documentation': None,
-        #    'homepage': None,
-        #    'issues': None
-        #    'requirements': ''
-        #}
+        galaxy_metadata= {
+            'namespace': args.namespace,
+            'name': collection,
+            'version': '1.0.0',  # TODO: add to spec, args?
+            'readme': None,
+            'authors': None,
+            'description': None,
+            'license': None,
+            'license_file': None,
+            'tags': None,
+            'dependencies': {},
+            'repository': None,
+            'documentation': None,
+            'homepage': None,
+            'issues': None
+        }
 
         for plugin_type in spec[collection].keys():
 
@@ -343,13 +344,17 @@ def assemble_collections(spec, args):
                 #extralines = False
 
                 #rewrite_mod_utils(pdata, coll, spec, args)
-                plugin_data_new = rewrite_doc_fragments(plugin_data_new, collection, spec, args)
+                plugin_data_new, docs_dependencies = rewrite_doc_fragments(plugin_data_new, collection, spec, args)
 
                 # clean too many empty lines
                 #if extralines:
                 #    data = clean_extra_lines(data)
 
                 if plugin_data != plugin_data_new:
+                    for dep in docs_dependencies:
+                        dep_collection = '%s.%s' % (args.namespace, dep)
+                        # FIXME hardcoded version
+                        galaxy_metadata['dependencies'][dep_collection] = '>=1.0'
                     logger.info('rewriting plugin references in %s' % dest)
                     with open(dest, 'w') as f:
                         f.write(plugin_data_new)
@@ -358,8 +363,8 @@ def assemble_collections(spec, args):
                 #copy_unit_tests(plugin, coll, spec, args)
 
         # write collection metadata
-        #with open(os.path.join(cdir, 'galaxy.yml'), 'w') as f:
-        #    f.write(yaml.dump(gdata, default_flow_style=False))
+        with open(os.path.join(collection_dir, 'galaxy.yml'), 'w') as f:
+            f.write(yaml.dump(galaxy_metadata, default_flow_style=False))
 
 
 def copy_tests(plugin, coll, spec, args):
