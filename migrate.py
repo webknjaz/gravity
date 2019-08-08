@@ -144,6 +144,15 @@ def clean_extra_lines(rawtext):
     return rawtext
 
 
+def get_fragment_collection(fragment_name, spec):
+    for collection in spec.keys():
+        doc_fragments_plugins = spec[collection].get('doc_fragments', [])
+        if fragment_name + '.py' in doc_fragments_plugins:
+            return collection
+
+    raise Exception('could not find %s doc_fragments in any collection specified in the spec %s' % (fragment_name, spec))
+
+
 def rewrite_doc_fragments(plugin_data, collection, spec, args):
     import ast
     class DocFragmentFinderVisitor(ast.NodeVisitor):
@@ -165,16 +174,17 @@ def rewrite_doc_fragments(plugin_data, collection, spec, args):
     tree = ast.parse(plugin_data)
     doc_finder = DocFragmentFinderVisitor()
     doc_finder.visit(tree)
-    for fragment in doc_finder.fragments:
-        #print(fragment)
-        pass
 
-        # if fragment in diff collection:
-            # TODO: add fqcn
-            #    newfrag = '%s.%s.%s' % (args.namespace, coll, fragment)
-            #    mdata = mdata.replace(oldfragment, newfragment)
+    for fragment in doc_finder.fragments:
+        fragment_collection = get_fragment_collection(fragment, spec)
+
+        if collection != fragment_collection:
+            new_fragment = '%s.%s.%s' % (args.namespace, fragment_collection, fragment)
+            # TODO make sure to replace only in DOCUMENTATION
+            plugin_data = plugin_data.replace(fragment, new_fragment)
             # TODO: update gdata.requirements
 
+    return plugin_data
 
 def rewrite_mod_utils(pdata, coll, spec, args):
     # ansible.module_utils.
@@ -331,16 +341,16 @@ def assemble_collections(spec, args):
                 #extralines = False
 
                 #rewrite_mod_utils(pdata, coll, spec, args)
-                rewrite_doc_fragments(plugin_data_new, collection, spec, args)
+                plugin_data_new = rewrite_doc_fragments(plugin_data_new, collection, spec, args)
 
                 # clean too many empty lines
                 #if extralines:
                 #    data = clean_extra_lines(data)
 
-                #if plugin_data != plugin_data_new:
-                #    logger.info('rewriting plugin references in %s' % dest)
-                #    with open(dest, 'w') as f:
-                #        f.write(plugin_data_new)
+                if plugin_data != plugin_data_new:
+                    logger.info('rewriting plugin references in %s' % dest)
+                    with open(dest, 'w') as f:
+                        f.write(plugin_data_new)
 
                 # process unit tests TODO: sanity? , integration?
                 #copy_unit_tests(plugin, coll, spec, args)
