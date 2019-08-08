@@ -9,7 +9,6 @@ import sys
 import yaml
 
 from collections.abc import Mapping
-from pathlib import Path
 
 from logzero import logger
 
@@ -272,6 +271,16 @@ def rewrite_mod_utils(pdata, coll, spec, args):
     return '\n'.join(dlines)
 
 
+def read_text_from_file(path):
+    with open(path, 'r') as f:
+        return f.read()
+
+
+def write_text_into_file(path, text):
+    with open(path, 'w') as f:
+        return f.write(text)
+
+
 def assemble_collections(spec, args):
     # NOTE releases_dir is already created by checkout_repo(), might want to move all that to something like ensure_dirs() ...
     releases_dir = os.path.join(args.vardir, 'releases')
@@ -334,10 +343,10 @@ def assemble_collections(spec, args):
                 seen.append(plugin_sig)
 
                 # TODO: currently requires 'full name of file', but should work w/o extension?
-                src = Path(releases_dir) / f'{DEVEL_BRANCH}.git' / src_plugin_base / plugin
-                dst = Path(dest_plugin_base) / os.path.basename(plugin)
+                src = os.path.join(releases_dir, DEVEL_BRANCH + '.git', src_plugin_base, plugin)
+                dest = os.path.join(dest_plugin_base, os.path.basename(plugin))
 
-                plugin_data = src.read_text()
+                plugin_data = read_text_from_file(src)
                 plugin_data_new = plugin_data[:]
 
                 # were any lines nullified?
@@ -355,9 +364,9 @@ def assemble_collections(spec, args):
                         dep_collection = '%s.%s' % (args.namespace, dep)
                         # FIXME hardcoded version
                         galaxy_metadata['dependencies'][dep_collection] = '>=1.0'
-                    logger.info('rewriting plugin references in %s' % dst)
+                    logger.info('rewriting plugin references in %s' % dest)
 
-                dst.write_text(plugin_data_new)
+                write_text_into_file(dest, plugin_data_new)
 
                 # process unit tests TODO: sanity? , integration?
                 #copy_unit_tests(plugin, collection, spec, args)
