@@ -225,8 +225,6 @@ def rewrite_imports_in_fst(mod_fst, token, exchange):
         if len(imp.targets.find_all('name_as_name', value='g:*Base')) > 0:
             continue  # Skip imports of Base classes
 
-        logger.debug(imp)
-        logger.debug(imp.targets.find_all('name_as_name', value='g:*Base'))
         imp_src[:token_length] = exchange  # replace the import
     return mod_fst
 
