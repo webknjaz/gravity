@@ -204,7 +204,7 @@ def rewrite_imports(mod_src_text, coll, spec, namespace):
 
 def rewrite_imports_in_fst(mod_fst, token, exchange):
     """Replace imports in the python module FST."""
-    for imp in (ml for ml in mod_fst if ml.type in {'import', 'from_import'}):
+    for imp in mod_fst.find_all(('import', 'from_import')):
         imp_src = imp.value
         if imp.type == 'import':
             imp_src = imp_src[0].value
