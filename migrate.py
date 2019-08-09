@@ -197,12 +197,23 @@ def rewrite_imports(mod_src_text, coll, spec, namespace):
     }
 
     mod_fst = redbaron.RedBaron(mod_src_text)
-    for old_imp, new_imp in import_map.items():
-        mod_fst = rewrite_imports_in_fst(mod_fst, old_imp, new_imp)
+    mod_fst = rewrite_imports_in_fst(mod_fst, import_map)
     return mod_fst.dumps()
 
 
-def rewrite_imports_in_fst(mod_fst, token, exchange):
+def match_import_src(imp_src, import_map):
+    """Find a replacement map entry matching the current import."""
+    imp_src_tuple = tuple(t.value for t in imp_src)
+    for old_imp, new_imp in import_map.items():
+        token_length = len(old_imp)
+        if imp_src_tuple[:token_length] != old_imp:
+            continue
+        return token_length, new_imp
+
+    raise LookupError(f"Couldn't find a replacement for {imp_src!s}")
+
+
+def rewrite_imports_in_fst(mod_fst, import_map):
     """Replace imports in the python module FST."""
     for imp in mod_fst.find_all(('import', 'from_import')):
         imp_src = imp.value
@@ -216,11 +227,12 @@ def rewrite_imports_in_fst(mod_fst, token, exchange):
         # ansible_collections.jctanner.cloud_vmware.module_utils.
         # TODO: update gdata.requirements if module_util is in diff
         # collection
-        token_length = len(token)
-        if tuple(t.value for t in imp_src[:token_length]) != token:
+        try:
+            token_length, exchange = match_import_src(imp_src, import_map)
+            # TODO: actually lookup part after token in spec to find
+            # 'correct collection'
+        except LookupError:
             continue
-        # TODO: actually lookup part after token in spec to find
-        # 'correct collection'
 
         if len(imp.targets.find_all('name_as_name', value='g:*Base')) > 0:
             continue  # Skip imports of Base classes
