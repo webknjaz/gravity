@@ -342,9 +342,10 @@ def assemble_collections(spec, args):
                 #copy_unit_tests(plugin, collection, spec, args)
 
         # write collection metadata
-        with open(os.path.join(collection_dir, 'galaxy.yml'), 'w') as f:
-            f.write(yaml.dump(galaxy_metadata, default_flow_style=False))
+        yaml_galaxy_metadata = yaml.dump(galaxy_metadata, default_flow_style=False, sort_keys=False)
+        write_text_into_file(os.path.join(collection_dir, 'galaxy.yml'), yaml_galaxy_metadata)
 
+        # init git repo
         subprocess.check_call(('git', 'init'), cwd=collection_dir)
         subprocess.check_call(('git', 'add', '.'), cwd=collection_dir)
         subprocess.check_call(
