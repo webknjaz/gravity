@@ -143,13 +143,13 @@ def clean_extra_lines(rawtext):
     return rawtext
 
 
-def get_fragment_collection(fragment_name, spec):
+def get_plugin_collection(plugin_name, plugin_type, spec):
     for collection in spec.keys():
-        doc_fragments_plugins = spec[collection].get('doc_fragments', [])
-        if fragment_name + '.py' in doc_fragments_plugins:
+        plugins = spec[collection].get(plugin_type, [])
+        if plugin_name + '.py' in plugins:
             return collection
 
-    raise Exception('could not find %s doc_fragments in any collection specified in the spec %s' % (fragment_name, spec))
+    raise LookupError('Could not find %s %s in any collection specified in the spec %s' % (plugin_name, plugin_type, spec))
 
 
 def rewrite_doc_fragments(plugin_data, collection, spec, args):
@@ -176,7 +176,7 @@ def rewrite_doc_fragments(plugin_data, collection, spec, args):
 
     deps = []
     for fragment in doc_finder.fragments:
-        fragment_collection = get_fragment_collection(fragment, spec)
+        fragment_collection = get_plugin_collection(fragment, 'doc_fragments', spec)
 
         if collection != fragment_collection:
             deps.append(fragment_collection)
@@ -188,17 +188,17 @@ def rewrite_doc_fragments(plugin_data, collection, spec, args):
     return plugin_data, deps
 
 
-def rewrite_imports(mod_src_text, coll, spec, namespace):
+def rewrite_imports(mod_src_text, collection, spec, namespace):
     """Rewrite imports map."""
-    plugins_path = ('ansible_collections', namespace, coll, 'plugins')
+    plugins_path = (namespace, collection, 'plugins')
     import_map = {
         ('ansible', 'module_utils'): plugins_path + ('module_utils', ),
         ('ansible', 'plugins'): plugins_path,
     }
 
     mod_fst = redbaron.RedBaron(mod_src_text)
-    mod_fst = rewrite_imports_in_fst(mod_fst, import_map)
-    return mod_fst.dumps()
+    mod_fst, deps = rewrite_imports_in_fst(mod_fst, import_map, collection, spec)
+    return mod_fst.dumps(), deps
 
 
 def match_import_src(imp_src, import_map):
@@ -213,32 +213,39 @@ def match_import_src(imp_src, import_map):
     raise LookupError(f"Couldn't find a replacement for {imp_src!s}")
 
 
-def rewrite_imports_in_fst(mod_fst, import_map):
+def rewrite_imports_in_fst(mod_fst, import_map, collection, spec):
     """Replace imports in the python module FST."""
+    deps = []
     for imp in mod_fst.find_all(('import', 'from_import')):
         imp_src = imp.value
         if imp.type == 'import':
             imp_src = imp_src[0].value
 
-        # TODO: this assumes the module_utils resides in the same
-        # collection, must use spec to find actual collection and then
-        # both rewrite import AND add collection to depenencies of
-        # current collection.
-        # ansible_collections.jctanner.cloud_vmware.module_utils.
-        # TODO: update gdata.requirements if module_util is in diff
-        # collection
         try:
             token_length, exchange = match_import_src(imp_src, import_map)
-            # TODO: actually lookup part after token in spec to find
-            # 'correct collection'
         except LookupError:
             continue
 
         if len(imp.targets.find_all('name_as_name', value='g:*Base')) > 0:
             continue  # Skip imports of Base classes
 
+        plugin_name = imp_src[-1].value
+        plugin_type = imp_src[-2].value
+        try:
+            plugin_collection = get_plugin_collection(plugin_name, plugin_type, spec)
+        except LookupError:
+            # plugin not in spec, assuming it stays in core and leaving as is
+            continue
+
+        if plugin_collection != collection:
+            deps.append(plugin_collection)
+            # FIXME I am changing a tuple!
+            exchange_new = list(exchange)
+            exchange_new[1] = plugin_collection
+            exchange = tuple(exchange_new)
+
         imp_src[:token_length] = exchange  # replace the import
-    return mod_fst
+    return mod_fst, deps
 
 
 def read_text_from_file(path):
@@ -322,7 +329,7 @@ def assemble_collections(spec, args):
                 # were any lines nullified?
                 #extralines = False
 
-                plugin_data_new = rewrite_imports(plugin_data_new, collection, spec, args.namespace)
+                plugin_data_new, import_dependencies = rewrite_imports(plugin_data_new, collection, spec, args.namespace)
                 plugin_data_new, docs_dependencies = rewrite_doc_fragments(plugin_data_new, collection, spec, args)
 
                 # clean too many empty lines
@@ -330,7 +337,7 @@ def assemble_collections(spec, args):
                 #    data = clean_extra_lines(data)
 
                 if plugin_data != plugin_data_new:
-                    for dep in docs_dependencies:
+                    for dep in docs_dependencies + import_dependencies:
                         dep_collection = '%s.%s' % (args.namespace, dep)
                         # FIXME hardcoded version
                         galaxy_metadata['dependencies'][dep_collection] = '>=1.0'
