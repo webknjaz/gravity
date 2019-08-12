@@ -190,14 +190,14 @@ def rewrite_doc_fragments(plugin_data, collection, spec, args):
 
 def rewrite_imports(mod_src_text, collection, spec, namespace):
     """Rewrite imports map."""
-    plugins_path = (namespace, collection, 'plugins')
+    plugins_path = ('ansible_collections', namespace, collection, 'plugins')
     import_map = {
         ('ansible', 'module_utils'): plugins_path + ('module_utils', ),
         ('ansible', 'plugins'): plugins_path,
     }
 
     mod_fst = redbaron.RedBaron(mod_src_text)
-    mod_fst, deps = rewrite_imports_in_fst(mod_fst, import_map, collection, spec)
+    deps = rewrite_imports_in_fst(mod_fst, import_map, collection, spec)
     return mod_fst.dumps(), deps
 
 
@@ -237,15 +237,12 @@ def rewrite_imports_in_fst(mod_fst, import_map, collection, spec):
             # plugin not in spec, assuming it stays in core and leaving as is
             continue
 
-        if plugin_collection != collection:
-            deps.append(plugin_collection)
-            # FIXME I am changing a tuple!
-            exchange_new = list(exchange)
-            exchange_new[1] = plugin_collection
-            exchange = tuple(exchange_new)
-
         imp_src[:token_length] = exchange  # replace the import
-    return mod_fst, deps
+        if plugin_collection != collection:
+            imp_src[2] = plugin_collection
+            deps.append(plugin_collection)
+
+    return deps
 
 
 def read_text_from_file(path):
