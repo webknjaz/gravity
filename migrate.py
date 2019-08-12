@@ -12,6 +12,8 @@ from collections.abc import Mapping
 
 from logzero import logger
 
+import redbaron
+
 
 DEVEL_URL = 'https://github.com/ansible/ansible.git'
 DEVEL_BRANCH = 'devel'
@@ -186,89 +188,67 @@ def rewrite_doc_fragments(plugin_data, collection, spec, args):
     return plugin_data, deps
 
 
-def rewrite_mod_utils(pdata, coll, spec, args):
-    # ansible.module_utils.
-    token = 'ansible.module_utils.'
+def rewrite_imports(mod_src_text, coll, spec, namespace):
+    """Rewrite imports map."""
+    plugins_path = ('ansible_collections', namespace, coll, 'plugins')
+    import_map = {
+        ('ansible', 'module_utils'): plugins_path + ('module_utils', ),
+        ('ansible', 'plugins'): plugins_path,
+    }
 
-    # TODO: this assumes the module_utils resides in the same collection, must use spec to find actual collection
-    # and then both rewrite import AND add collection to depenencies of current collection.
-    # ansible_collections.jctanner.cloud_vmware.module_utils.
-    dlines = pdata.split('\n')
-    for idx, x in enumerate(dlines):
-        if not x.startswith('from '):
+    mod_fst = redbaron.RedBaron(mod_src_text)
+    mod_fst = rewrite_imports_in_fst(mod_fst, import_map)
+    return mod_fst.dumps()
+
+
+def match_import_src(imp_src, import_map):
+    """Find a replacement map entry matching the current import."""
+    imp_src_tuple = tuple(t.value for t in imp_src)
+    for old_imp, new_imp in import_map.items():
+        token_length = len(old_imp)
+        if imp_src_tuple[:token_length] != old_imp:
             continue
-        if token in x:  # TODO actually lookup part after token in spec to find 'correct collection'
-            exchange = 'ansible_collections.%s.%s.plugins.module_utils.' % (args.namespace, coll)
-            newx = x.replace(token, exchange)
+        return token_length, new_imp
 
-            #TODO: update gdata.requirements if module_util is in diff collection
+    raise LookupError(f"Couldn't find a replacement for {imp_src!s}")
 
-            # now handle line length rules
-            if len(newx) < 160 and ('(' not in x) and '\\' not in x:
-                dlines[idx] = newx
-                continue
 
-            if '(' in x and ')' not in x:
-                x = ''
-                tonull = []
-                for thisx in range(idx, len(mdlines)):
-                    x += dlines[thisx]
-                    tonull.append(thisx)
-                    if ')' in dlines[thisx]:
-                        break
+def rewrite_imports_in_fst(mod_fst, import_map):
+    """Replace imports in the python module FST."""
+    for imp in mod_fst.find_all(('import', 'from_import')):
+        imp_src = imp.value
+        if imp.type == 'import':
+            imp_src = imp_src[0].value
 
-                if len(tonull) > 1:
-                    extralines = True
-                for tn in tonull:
-                    dlines[tn] = ''
+        # TODO: this assumes the module_utils resides in the same
+        # collection, must use spec to find actual collection and then
+        # both rewrite import AND add collection to depenencies of
+        # current collection.
+        # ansible_collections.jctanner.cloud_vmware.module_utils.
+        # TODO: update gdata.requirements if module_util is in diff
+        # collection
+        try:
+            token_length, exchange = match_import_src(imp_src, import_map)
+            # TODO: actually lookup part after token in spec to find
+            # 'correct collection'
+        except LookupError:
+            continue
 
-            if '\\' in x:
-                x = ''
-                tonull = []
-                for thisx in range(idx, len(dlines)):
+        if len(imp.targets.find_all('name_as_name', value='g:*Base')) > 0:
+            continue  # Skip imports of Base classes
 
-                    if thisx != idx and dlines[thisx].startswith('from '):
-                        break
+        imp_src[:token_length] = exchange  # replace the import
+    return mod_fst
 
-                    print('add %s' % dlines[thisx])
-                    x += dlines[thisx]
-                    tonull.append(thisx)
 
-                    if thisx != idx and (not dlines[thisx].strip() or dlines[thisx][0].isalnum()):
-                        break
-                    print('add %s' % dlines[thisx])
+def read_text_from_file(path):
+    with open(path, 'r') as f:
+        return f.read()
 
-                if len(tonull) > 1:
-                    extralines = True
-                for tn in tonull:
-                    dlines[tn] = ''
 
-            # we have to use newlined imports for those that are >160 chars
-            ximports = x[:]
-
-            #if '(' in x and ')' not in x:
-            #    import epdb; epdb.st()
-
-            if si in ximports:
-                ximports = ximports.replace(token, '')
-            elif di in ximports:
-                ximports = ximports.replace(exchange, '')
-            ximports = ximports.replace('from', '')
-            ximports = ximports.replace('import', '')
-            ximports = ximports.replace('\\', '')
-            ximports = ximports.replace('(', '')
-            ximports = ximports.replace(')', '')
-            ximports = ximports.split(',')
-            ximports = [x.strip() for x in ximports if x.strip()]
-            ximports = sorted(set(ximports))
-
-            newx = 'from %s import (\n' % exchange
-            for xi in ximports:
-                newx += '    ' + xi + ',\n'
-            newx += ')'
-            dlines[idx] = newx
-
-    data = '\n'.join(dlines)
+def write_text_into_file(path, text):
+    with open(path, 'w') as f:
+        return f.write(text)
 
 
 def assemble_collections(spec, args):
@@ -336,18 +316,13 @@ def assemble_collections(spec, args):
                 src = os.path.join(releases_dir, DEVEL_BRANCH + '.git', src_plugin_base, plugin)
                 dest = os.path.join(dest_plugin_base, os.path.basename(plugin))
 
-                # create and read copy for modification
-                # FIXME copy or move
-                shutil.copy(src, dest)
-
-                with open(dest, 'r') as f:
-                    plugin_data = f.read()
+                plugin_data = read_text_from_file(src)
                 plugin_data_new = plugin_data[:]
 
                 # were any lines nullified?
                 #extralines = False
 
-                #rewrite_mod_utils(pdata, coll, spec, args)
+                plugin_data_new = rewrite_imports(plugin_data_new, collection, spec, args.namespace)
                 plugin_data_new, docs_dependencies = rewrite_doc_fragments(plugin_data_new, collection, spec, args)
 
                 # clean too many empty lines
@@ -360,11 +335,11 @@ def assemble_collections(spec, args):
                         # FIXME hardcoded version
                         galaxy_metadata['dependencies'][dep_collection] = '>=1.0'
                     logger.info('rewriting plugin references in %s' % dest)
-                    with open(dest, 'w') as f:
-                        f.write(plugin_data_new)
+
+                write_text_into_file(dest, plugin_data_new)
 
                 # process unit tests TODO: sanity? , integration?
-                #copy_unit_tests(plugin, coll, spec, args)
+                #copy_unit_tests(plugin, collection, spec, args)
 
         # write collection metadata
         with open(os.path.join(collection_dir, 'galaxy.yml'), 'w') as f:
