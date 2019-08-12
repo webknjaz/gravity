@@ -3,8 +3,6 @@
 yum_collection:
   action:
     - yum.py
-  module_utils:
-    - yumdnf.py
   modules:
     - packaging/os/yum.py
 
@@ -35,6 +33,10 @@ yum_collection:
     - linear.py
   # vars: https://github.com/ansible/ansible/issues/59997
 
-other_collection:
+dep_collection1:
   doc_fragments:
     - default_callback.py
+
+dep_collection2:
+  module_utils:
+    - yumdnf.py
