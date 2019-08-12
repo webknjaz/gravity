@@ -178,12 +178,13 @@ def rewrite_doc_fragments(plugin_data, collection, spec, args):
     for fragment in doc_finder.fragments:
         fragment_collection = get_plugin_collection(fragment, 'doc_fragments', spec)
 
+        # TODO what if it's in a different namespace (different spec)? do we care?
+        new_fragment = '%s.%s.%s' % (args.namespace, fragment_collection, fragment)
+        # TODO make sure to replace only in DOCUMENTATION
+        plugin_data = plugin_data.replace(fragment, new_fragment)
+
         if collection != fragment_collection:
             deps.append(fragment_collection)
-            # TODO what if it's in a different namespace (different spec)? do we care?
-            new_fragment = '%s.%s.%s' % (args.namespace, fragment_collection, fragment)
-            # TODO make sure to replace only in DOCUMENTATION
-            plugin_data = plugin_data.replace(fragment, new_fragment)
 
     return plugin_data, deps
 
