@@ -27,6 +27,7 @@ yum_collection:
   test:
     - core.py
   shell:
+    - cmd.py  # has shell_windows.py as a doc fragment which stays in core
     - sh.py
   strategy:
     - free.py
