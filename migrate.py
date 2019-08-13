@@ -281,6 +281,9 @@ def assemble_collections(spec, args):
     if args.refresh and os.path.exists(collections_base_dir):
         shutil.rmtree(collections_base_dir)
 
+    # make initial YAML transformation to minimize the diff
+    mark_moved_resources(checkout_path, 'init', set())
+
     seen = {}
     migrated_to_collection = defaultdict(set)
     for collection in spec.keys():
