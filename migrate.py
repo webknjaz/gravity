@@ -318,7 +318,13 @@ def assemble_collections(spec, args):
 
                 # TODO: currently requires 'full name of file', but should work w/o extension?
                 src = os.path.join(releases_dir, DEVEL_BRANCH + '.git', src_plugin_base, plugin)
-                dest = os.path.join(dest_plugin_base, os.path.basename(plugin))
+                if (args.preserve_module_subdirs and plugin_type == 'modules') or plugin_type == 'module_utils':
+                    dest = os.path.join(dest_plugin_base, plugin)
+                    dest_dir = os.path.dirname(dest)
+                    if not os.path.exists(dest_dir):
+                        os.makedirs(dest_dir)
+                else:
+                    dest = os.path.join(dest_plugin_base, os.path.basename(plugin))
 
                 plugin_data = read_text_from_file(src)
                 plugin_data_new = plugin_data[:]
@@ -481,6 +487,8 @@ def main():
                         help='force refreshing local Ansible checkout')
     parser.add_argument('-t', '--target-dir', dest='vardir', default=VARDIR,
                         help='target directory for resulting collections and rpm')
+    parser.add_argument('-p', '--preserve-module-subdirs', action='store_true', dest='preserve_module_subdirs', default=False,
+                        help='preserve module subdirs per spec')
 
     args = parser.parse_args()
 
