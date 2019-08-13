@@ -55,7 +55,7 @@ def run_command(cmd=None, check_rc=True):
 
 def checkout_repo(vardir=VARDIR, refresh=False):
     releases_dir = os.path.join(vardir, 'releases')
-    devel_path = os.path.join(releases_dir, 'devel.git')
+    devel_path = os.path.join(releases_dir, f'{DEVEL_BRANCH}.git')
 
     if refresh and os.path.exists(devel_path):
         # TODO do we want/is it worth to use a git library instead?
@@ -263,6 +263,7 @@ def write_text_into_file(path, text):
 def assemble_collections(spec, args):
     # NOTE releases_dir is already created by checkout_repo(), might want to move all that to something like ensure_dirs() ...
     releases_dir = os.path.join(args.vardir, 'releases')
+    checkout_path = os.path.join(releases_dir, f'{DEVEL_BRANCH}.git')
     collections_base_dir = os.path.join(args.vardir, 'collections')
     meta_dir = os.path.join(args.vardir, 'meta')
 
@@ -322,7 +323,7 @@ def assemble_collections(spec, args):
                 seen.append(plugin_sig)
 
                 # TODO: currently requires 'full name of file', but should work w/o extension?
-                src = os.path.join(releases_dir, DEVEL_BRANCH + '.git', src_plugin_base, plugin)
+                src = os.path.join(checkout_path, src_plugin_base, plugin)
                 if (args.preserve_module_subdirs and plugin_type == 'modules') or plugin_type == 'module_utils':
                     dest = os.path.join(dest_plugin_base, plugin)
                     dest_dir = os.path.dirname(dest)
