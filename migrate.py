@@ -10,6 +10,7 @@ import sys
 from collections import defaultdict
 from collections.abc import Mapping
 from pathlib import Path
+from string import Template
 
 from logzero import logger
 from ruamel.yaml import YAML
@@ -382,6 +383,48 @@ def assemble_collections(spec, args):
             ('git', 'commit', '-m', 'Initial commit', '--allow-empty'),
             cwd=collection_dir,
         )
+
+        mark_moved_resources(
+            checkout_path, collection, migrated_to_collection[collection],
+        )
+
+
+def mark_moved_resources(checkout_path, collection, migrated_to_collection):
+    """Mark migrated paths in botmeta."""
+    moved_collection_url = (
+        f'https://github.com/ansible-collections/{collection}'
+    )
+    botmeta_checkout_path = (
+        Path(checkout_path).joinpath('.github', 'BOTMETA.yml')
+    )
+    close_related_issues = False
+
+    botmeta = read_yaml_file(botmeta_checkout_path)
+
+    botmeta_files = botmeta['files']
+    botmeta_file_paths = botmeta_files.keys()
+    botmeta_macros = botmeta['macros']
+
+    transformed_path_key_map = {}
+    for k in botmeta_file_paths:
+        transformed_key = Template(k).substitute(**botmeta_macros)
+        if transformed_key == k:
+            continue
+        transformed_path_key_map[transformed_key] = k
+
+    for migrated_resource in migrated_to_collection:
+        macro_path = transformed_path_key_map.get(
+            migrated_resource, migrated_resource,
+        )
+
+        migrated_secion = botmeta_files.get(macro_path)
+        if not migrated_secion:
+            migrated_secion = botmeta_files[macro_path] = {}
+
+        migrated_secion['close'] = close_related_issues
+        migrated_secion['moved'] = moved_collection_url
+
+    write_yaml_into_file_as_is(botmeta_checkout_path, botmeta)
 
 
 def copy_tests(plugin, coll, spec, args):
