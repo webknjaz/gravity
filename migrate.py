@@ -397,9 +397,9 @@ def mark_moved_resources(checkout_path, collection, migrated_to_collection):
     moved_collection_url = (
         f'https://github.com/ansible-collections/{collection}'
     )
-    botmeta_checkout_path = (
-        Path(checkout_path).joinpath('.github', 'BOTMETA.yml')
-    )
+    checkout_dir = Path(checkout_path)
+    botmeta_rel_path = Path('.github/BOTMETA.yml')
+    botmeta_checkout_path = checkout_dir.joinpath(botmeta_rel_path)
     close_related_issues = False
 
     botmeta = read_yaml_file(botmeta_checkout_path)
