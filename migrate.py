@@ -176,7 +176,11 @@ def rewrite_doc_fragments(plugin_data, collection, spec, args):
 
     deps = []
     for fragment in doc_finder.fragments:
-        fragment_collection = get_plugin_collection(fragment, 'doc_fragments', spec)
+        try:
+            fragment_collection = get_plugin_collection(fragment, 'doc_fragments', spec)
+        except LookupError:
+            # plugin not in spec, assuming it stays in core and leaving as is
+            continue
 
         # TODO what if it's in a different namespace (different spec)? do we care?
         new_fragment = '%s.%s.%s' % (args.namespace, fragment_collection, fragment)
