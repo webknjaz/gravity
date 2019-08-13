@@ -7,6 +7,7 @@ import shutil
 import subprocess
 import sys
 
+from collections import defaultdict
 from collections.abc import Mapping
 from pathlib import Path
 
@@ -279,7 +280,8 @@ def assemble_collections(spec, args):
     if args.refresh and os.path.exists(collections_base_dir):
         shutil.rmtree(collections_base_dir)
 
-    seen = []
+    seen = {}
+    migrated_to_collection = defaultdict(set)
     for collection in spec.keys():
 
         collection_dir = os.path.join(collections_base_dir, 'ansible_collections', args.namespace, collection)
@@ -329,10 +331,11 @@ def assemble_collections(spec, args):
                 if plugin_sig in seen:
                     # FIXME print in which collection?
                     raise Exception('Each plugin needs to be assigned to one collection only. %s has been already processed.' % plugin_sig)
-                seen.append(plugin_sig)
+                seen[plugin_sig] = collection
 
                 # TODO: currently requires 'full name of file', but should work w/o extension?
                 src = os.path.join(checkout_path, src_plugin_base, plugin)
+                migrated_to_collection[collection].add(os.path.join(src_plugin_base, plugin))
                 if (args.preserve_module_subdirs and plugin_type == 'modules') or plugin_type == 'module_utils':
                     dest = os.path.join(dest_plugin_base, plugin)
                     dest_dir = os.path.dirname(dest)
