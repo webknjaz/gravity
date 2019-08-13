@@ -333,8 +333,11 @@ def assemble_collections(spec, args):
             for plugin in spec[collection][plugin_type]:
                 plugin_sig = '%s/%s' % (plugin_type, plugin)
                 if plugin_sig in seen:
-                    # FIXME print in which collection?
-                    raise Exception('Each plugin needs to be assigned to one collection only. %s has been already processed.' % plugin_sig)
+                    raise ValueError(
+                        'Each plugin needs to be assigned to one collection '
+                        f'only. {plugin_sig} has already been processed as a '
+                        f'part of `{seen[plugin_sig]}` collection.'
+                    )
                 seen[plugin_sig] = collection
 
                 # TODO: currently requires 'full name of file', but should work w/o extension?
