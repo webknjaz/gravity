@@ -429,6 +429,20 @@ def mark_moved_resources(checkout_path, collection, migrated_to_collection):
 
     write_yaml_into_file_as_is(botmeta_checkout_path, botmeta)
 
+    # Commit changes to the migrated Git repo
+    subprocess.check_call(
+        ('git', 'add', f'{botmeta_rel_path!s}'),
+        cwd=checkout_dir,
+    )
+    subprocess.check_call(
+        (
+            'git', 'commit',
+            '-m', f'Mark migrated {collection}',
+            '--allow-empty',
+        ),
+        cwd=checkout_dir,
+    )
+
 
 def copy_tests(plugin, coll, spec, args):
 
