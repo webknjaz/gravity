@@ -6,6 +6,7 @@ import os
 import shutil
 import subprocess
 import sys
+import yaml
 
 from collections import defaultdict
 from collections.abc import Mapping
@@ -13,13 +14,9 @@ from pathlib import Path
 from string import Template
 
 from logzero import logger
-from ruamel.yaml import YAML
 
 import redbaron
 
-
-yaml = YAML()
-yaml.default_flow_style = False
 
 DEVEL_URL = 'https://github.com/ansible/ansible.git'
 DEVEL_BRANCH = 'devel'
@@ -77,11 +74,13 @@ def checkout_repo(vardir=VARDIR, refresh=False):
 
 
 def read_yaml_file(path):
-    return yaml.load(Path(path))
+    with Path(path).open('rb') as yaml_file:
+        return yaml.safe_load(yaml_file)
 
 
 def write_yaml_into_file_as_is(path, data):
-    yaml.dump(data, Path(path))
+    yaml_text = yaml.dump(data, default_flow_style=False, sort_keys=False)
+    write_text_into_file(path, yaml_text)
 
 
 def load_spec_file(spec_file):
@@ -176,7 +175,7 @@ def rewrite_doc_fragments(plugin_data, collection, spec, args):
             for name in node.targets:
                 if getattr(name, 'id', '') == 'DOCUMENTATION':
                     docs = node.value.s.strip('\n')
-                    docs_parsed = yaml.load(docs)
+                    docs_parsed = yaml.safe_load(docs)
                     self.fragments = docs_parsed.get('extends_documentation_fragment', [])
 
     # TODO: use ansible-doc --json instead? plugin loader/docs directly?
