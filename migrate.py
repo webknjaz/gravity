@@ -10,7 +10,6 @@ import yaml
 
 from collections import defaultdict
 from collections.abc import Mapping
-from pathlib import Path
 from string import Template
 
 from logzero import logger
@@ -74,7 +73,7 @@ def checkout_repo(vardir=VARDIR, refresh=False):
 
 
 def read_yaml_file(path):
-    with Path(path).open('rb') as yaml_file:
+    with open(path, 'rb') as yaml_file:
         return yaml.safe_load(yaml_file)
 
 
@@ -394,14 +393,13 @@ def assemble_collections(spec, args):
         )
 
 
-def mark_moved_resources(checkout_path, collection, migrated_to_collection):
+def mark_moved_resources(checkout_dir, collection, migrated_to_collection):
     """Mark migrated paths in botmeta."""
     moved_collection_url = (
         f'https://github.com/ansible-collections/{collection}'
     )
-    checkout_dir = Path(checkout_path)
-    botmeta_rel_path = Path('.github/BOTMETA.yml')
-    botmeta_checkout_path = checkout_dir.joinpath(botmeta_rel_path)
+    botmeta_rel_path = '.github/BOTMETA.yml'
+    botmeta_checkout_path = os.path.join(checkout_dir, botmeta_rel_path)
     close_related_issues = False
 
     botmeta = read_yaml_file(botmeta_checkout_path)
