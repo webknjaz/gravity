@@ -8,7 +8,9 @@ import subprocess
 import sys
 import yaml
 
+from collections import defaultdict
 from collections.abc import Mapping
+from string import Template
 
 from logzero import logger
 
@@ -55,7 +57,7 @@ def run_command(cmd=None, check_rc=True):
 
 def checkout_repo(vardir=VARDIR, refresh=False):
     releases_dir = os.path.join(vardir, 'releases')
-    devel_path = os.path.join(releases_dir, 'devel.git')
+    devel_path = os.path.join(releases_dir, f'{DEVEL_BRANCH}.git')
 
     if refresh and os.path.exists(devel_path):
         # TODO do we want/is it worth to use a git library instead?
@@ -70,12 +72,19 @@ def checkout_repo(vardir=VARDIR, refresh=False):
         rc, stdout, stderr = _run_command(cmd)
 
 
+def read_yaml_file(path):
+    with open(path, 'rb') as yaml_file:
+        return yaml.safe_load(yaml_file)
+
+
+def write_yaml_into_file_as_is(path, data):
+    yaml_text = yaml.dump(data, default_flow_style=False, sort_keys=False)
+    write_text_into_file(path, yaml_text)
+
+
 def load_spec_file(spec_file):
 
-    spec = {}
-    with open(spec_file, 'rb') as spec_fpointer:
-        # TODO: capture yamlerror?
-        spec = yaml.safe_load(spec_fpointer)
+    spec = read_yaml_file(spec_file)  # TODO: capture yamlerror?
 
     if not isinstance(spec, Mapping):
         sys.exit("Invalid format for spec file, expected a dictionary and got %s" % type(spec))
@@ -263,13 +272,18 @@ def write_text_into_file(path, text):
 def assemble_collections(spec, args):
     # NOTE releases_dir is already created by checkout_repo(), might want to move all that to something like ensure_dirs() ...
     releases_dir = os.path.join(args.vardir, 'releases')
+    checkout_path = os.path.join(releases_dir, f'{DEVEL_BRANCH}.git')
     collections_base_dir = os.path.join(args.vardir, 'collections')
     meta_dir = os.path.join(args.vardir, 'meta')
 
     if args.refresh and os.path.exists(collections_base_dir):
         shutil.rmtree(collections_base_dir)
 
-    seen = []
+    # make initial YAML transformation to minimize the diff
+    mark_moved_resources(checkout_path, 'init', set())
+
+    seen = {}
+    migrated_to_collection = defaultdict(set)
     for collection in spec.keys():
 
         collection_dir = os.path.join(collections_base_dir, 'ansible_collections', args.namespace, collection)
@@ -317,12 +331,16 @@ def assemble_collections(spec, args):
             for plugin in spec[collection][plugin_type]:
                 plugin_sig = '%s/%s' % (plugin_type, plugin)
                 if plugin_sig in seen:
-                    # FIXME print in which collection?
-                    raise Exception('Each plugin needs to be assigned to one collection only. %s has been already processed.' % plugin_sig)
-                seen.append(plugin_sig)
+                    raise ValueError(
+                        'Each plugin needs to be assigned to one collection '
+                        f'only. {plugin_sig} has already been processed as a '
+                        f'part of `{seen[plugin_sig]}` collection.'
+                    )
+                seen[plugin_sig] = collection
 
                 # TODO: currently requires 'full name of file', but should work w/o extension?
-                src = os.path.join(releases_dir, DEVEL_BRANCH + '.git', src_plugin_base, plugin)
+                src = os.path.join(checkout_path, src_plugin_base, plugin)
+                migrated_to_collection[collection].add(os.path.join(src_plugin_base, plugin))
                 if (args.preserve_module_subdirs and plugin_type == 'modules') or plugin_type == 'module_utils':
                     dest = os.path.join(dest_plugin_base, plugin)
                     dest_dir = os.path.dirname(dest)
@@ -357,8 +375,10 @@ def assemble_collections(spec, args):
                 #copy_unit_tests(plugin, collection, spec, args)
 
         # write collection metadata
-        yaml_galaxy_metadata = yaml.dump(galaxy_metadata, default_flow_style=False, sort_keys=False)
-        write_text_into_file(os.path.join(collection_dir, 'galaxy.yml'), yaml_galaxy_metadata)
+        write_yaml_into_file_as_is(
+            os.path.join(collection_dir, 'galaxy.yml'),
+            galaxy_metadata,
+        )
 
         # init git repo
         subprocess.check_call(('git', 'init'), cwd=collection_dir)
@@ -367,6 +387,61 @@ def assemble_collections(spec, args):
             ('git', 'commit', '-m', 'Initial commit', '--allow-empty'),
             cwd=collection_dir,
         )
+
+        mark_moved_resources(
+            checkout_path, collection, migrated_to_collection[collection],
+        )
+
+
+def mark_moved_resources(checkout_dir, collection, migrated_to_collection):
+    """Mark migrated paths in botmeta."""
+    moved_collection_url = (
+        f'https://github.com/ansible-collections/{collection}'
+    )
+    botmeta_rel_path = '.github/BOTMETA.yml'
+    botmeta_checkout_path = os.path.join(checkout_dir, botmeta_rel_path)
+    close_related_issues = False
+
+    botmeta = read_yaml_file(botmeta_checkout_path)
+
+    botmeta_files = botmeta['files']
+    botmeta_file_paths = botmeta_files.keys()
+    botmeta_macros = botmeta['macros']
+
+    transformed_path_key_map = {}
+    for k in botmeta_file_paths:
+        transformed_key = Template(k).substitute(**botmeta_macros)
+        if transformed_key == k:
+            continue
+        transformed_path_key_map[transformed_key] = k
+
+    for migrated_resource in migrated_to_collection:
+        macro_path = transformed_path_key_map.get(
+            migrated_resource, migrated_resource,
+        )
+
+        migrated_secion = botmeta_files.get(macro_path)
+        if not migrated_secion:
+            migrated_secion = botmeta_files[macro_path] = {}
+
+        migrated_secion['close'] = close_related_issues
+        migrated_secion['moved'] = moved_collection_url
+
+    write_yaml_into_file_as_is(botmeta_checkout_path, botmeta)
+
+    # Commit changes to the migrated Git repo
+    subprocess.check_call(
+        ('git', 'add', f'{botmeta_rel_path!s}'),
+        cwd=checkout_dir,
+    )
+    subprocess.check_call(
+        (
+            'git', 'commit',
+            '-m', f'Mark migrated {collection}',
+            '--allow-empty',
+        ),
+        cwd=checkout_dir,
+    )
 
 
 def copy_tests(plugin, coll, spec, args):
