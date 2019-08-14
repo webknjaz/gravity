@@ -3060,29 +3060,6 @@ community:
     - utilities/helper/_accelerate.py
     - utilities/logic/set_stats.py
     - web_infrastructure/_jenkins_job_facts.py
-    - web_infrastructure/ansible_tower/tower_credential.py
-    - web_infrastructure/ansible_tower/tower_credential_type.py
-    - web_infrastructure/ansible_tower/tower_group.py
-    - web_infrastructure/ansible_tower/tower_host.py
-    - web_infrastructure/ansible_tower/tower_inventory.py
-    - web_infrastructure/ansible_tower/tower_inventory_source.py
-    - web_infrastructure/ansible_tower/tower_job_cancel.py
-    - web_infrastructure/ansible_tower/tower_job_launch.py
-    - web_infrastructure/ansible_tower/tower_job_list.py
-    - web_infrastructure/ansible_tower/tower_job_template.py
-    - web_infrastructure/ansible_tower/tower_job_wait.py
-    - web_infrastructure/ansible_tower/tower_label.py
-    - web_infrastructure/ansible_tower/tower_notification.py
-    - web_infrastructure/ansible_tower/tower_organization.py
-    - web_infrastructure/ansible_tower/tower_project.py
-    - web_infrastructure/ansible_tower/tower_receive.py
-    - web_infrastructure/ansible_tower/tower_role.py
-    - web_infrastructure/ansible_tower/tower_send.py
-    - web_infrastructure/ansible_tower/tower_settings.py
-    - web_infrastructure/ansible_tower/tower_team.py
-    - web_infrastructure/ansible_tower/tower_user.py
-    - web_infrastructure/ansible_tower/tower_workflow_launch.py
-    - web_infrastructure/ansible_tower/tower_workflow_template.py
     - web_infrastructure/apache2_mod_proxy.py
     - web_infrastructure/apache2_module.py
     - web_infrastructure/deploy_helper.py
@@ -3577,3 +3554,28 @@ windows:
     shell:
     - cmd.py
     - powershell.py
+tower:
+    modules:
+    - web_infrastructure/ansible_tower/tower_credential.py
+    - web_infrastructure/ansible_tower/tower_credential_type.py
+    - web_infrastructure/ansible_tower/tower_group.py
+    - web_infrastructure/ansible_tower/tower_host.py
+    - web_infrastructure/ansible_tower/tower_inventory.py
+    - web_infrastructure/ansible_tower/tower_inventory_source.py
+    - web_infrastructure/ansible_tower/tower_job_cancel.py
+    - web_infrastructure/ansible_tower/tower_job_launch.py
+    - web_infrastructure/ansible_tower/tower_job_list.py
+    - web_infrastructure/ansible_tower/tower_job_template.py
+    - web_infrastructure/ansible_tower/tower_job_wait.py
+    - web_infrastructure/ansible_tower/tower_label.py
+    - web_infrastructure/ansible_tower/tower_notification.py
+    - web_infrastructure/ansible_tower/tower_organization.py
+    - web_infrastructure/ansible_tower/tower_project.py
+    - web_infrastructure/ansible_tower/tower_receive.py
+    - web_infrastructure/ansible_tower/tower_role.py
+    - web_infrastructure/ansible_tower/tower_send.py
+    - web_infrastructure/ansible_tower/tower_settings.py
+    - web_infrastructure/ansible_tower/tower_team.py
+    - web_infrastructure/ansible_tower/tower_user.py
+    - web_infrastructure/ansible_tower/tower_workflow_launch.py
+    - web_infrastructure/ansible_tower/tower_workflow_template.py
