@@ -6,6 +6,7 @@ import os
 import shutil
 import subprocess
 import sys
+import warnings
 import yaml
 
 from collections import defaultdict
@@ -154,9 +155,10 @@ def clean_extra_lines(rawtext):
 
 def get_plugin_collection(plugin_name, plugin_type, spec):
     for collection in spec.keys():
-        plugins = spec[collection].get(plugin_type, [])
-        if plugin_name + '.py' in plugins:
-            return collection
+        if spec[collection]: # avoid empty collections
+            plugins = spec[collection].get(plugin_type, [])
+            if plugin_name + '.py' in plugins:
+                return collection
 
     raise LookupError('Could not find %s %s in any collection specified in the spec %s' % (plugin_name, plugin_type, spec))
 
@@ -249,7 +251,7 @@ def rewrite_imports_in_fst(mod_fst, import_map, collection, spec):
             plugin_collection = get_plugin_collection(plugin_name, plugin_type, spec)
         except LookupError:
             # plugin not in spec, assuming it stays in core and leaving as is
-            continue
+            warnings.warn('Could not find "%s" in spec, assuming it stays in core' % plugin_name)
 
         imp_src[:token_length] = exchange  # replace the import
         if plugin_collection != collection:
