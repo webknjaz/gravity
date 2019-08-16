@@ -6,7 +6,6 @@ import os
 import shutil
 import subprocess
 import sys
-import warnings
 import yaml
 
 from collections import defaultdict
@@ -246,7 +245,7 @@ def rewrite_imports_in_fst(mod_fst, import_map, collection, spec):
             if len(imp.targets.find_all('name_as_name', value='g:*Base')) > 0:
                 continue  # Skip imports of Base classes
         except Exception:
-            warnings.warn('failing plugin with import: %s' % (imp))
+            logger.info('failing plugin with import: %s' % (imp))
             raise
 
         plugin_name = imp_src[-1].value
@@ -255,7 +254,7 @@ def rewrite_imports_in_fst(mod_fst, import_map, collection, spec):
             plugin_collection = get_plugin_collection(plugin_name, plugin_type, spec)
         except LookupError:
             # plugin not in spec, assuming it stays in core and skipping
-            warnings.warn('Could not find "' + plugin_name + '" in spec, assuming it stays in core')
+            logger.info('Could not find "' + plugin_name + '" in spec, assuming it stays in core')
             continue
 
         imp_src[:token_length] = exchange  # replace the import
