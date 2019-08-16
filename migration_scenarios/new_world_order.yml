@@ -276,7 +276,7 @@ junos:
     - network/junos/junos_user.py
     - network/junos/junos_vlan.py
     - network/junos/junos_vrf.py
-layer2:
+#layer2:
 layer3:
     modules:
     - network/layer3/net_l3_interface.py
