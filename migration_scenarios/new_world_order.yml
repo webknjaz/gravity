@@ -64,6 +64,7 @@ aci:
     - network/aci/aci_vrf.py
 bigip:
     modules:
+    - network/f5/_bigip_device_facts.py
     - network/f5/bigip_apm_policy_fetch.py
     - network/f5/bigip_apm_policy_import.py
     - network/f5/bigip_appsvcs_extension.py
@@ -82,7 +83,7 @@ bigip:
     - network/f5/bigip_device_auth_ldap.py
     - network/f5/bigip_device_connectivity.py
     - network/f5/bigip_device_dns.py
-    - network/f5/bigip_device_facts.py
+    - network/f5/bigip_device_info.py
     - network/f5/bigip_device_group.py
     - network/f5/bigip_device_group_member.py
     - network/f5/bigip_device_ha_group.py
@@ -217,7 +218,7 @@ eos:
     - network/eos/eos_config.py
     - network/eos/eos_eapi.py
     - network/eos/eos_facts.py
-    - network/eos/eos_interface.py
+    - network/eos/eos_interfaces.py
     - network/eos/eos_l2_interface.py
     - network/eos/eos_l3_interface.py
     - network/eos/eos_linkagg.py
@@ -239,7 +240,7 @@ ios:
     - network/ios/ios_command.py
     - network/ios/ios_config.py
     - network/ios/ios_facts.py
-    - network/ios/ios_interface.py
+    - network/ios/ios_interfaces.py
     - network/ios/ios_l2_interface.py
     - network/ios/ios_l3_interface.py
     - network/ios/ios_linkagg.py
@@ -255,16 +256,21 @@ ios:
 #iosxr:
 junos:
     modules:
+    - network/junos/_junos_linkagg.py
+    - network/junos/_junos_l2_interface.py
+    - network/junos/_junos_l3_interface.py
+    - network/junos/_junos_lldp.py
+    - network/junos/_junos_lldp_interface.py
+    - network/junos/_junos_vlan.py
     - network/junos/junos_banner.py
     - network/junos/junos_command.py
     - network/junos/junos_config.py
     - network/junos/junos_facts.py
-    - network/junos/junos_interface.py
-    - network/junos/junos_l2_interface.py
-    - network/junos/junos_l3_interface.py
-    - network/junos/junos_linkagg.py
-    - network/junos/junos_lldp.py
-    - network/junos/junos_lldp_interface.py
+    - network/junos/junos_interfaces.py
+    - network/junos/junos_l2_interfaces.py
+    - network/junos/junos_l3_interfaces.py
+    - network/junos/junos_lldp_global.py
+    - network/junos/junos_lldp_interfaces.py
     - network/junos/junos_logging.py
     - network/junos/junos_netconf.py
     - network/junos/junos_package.py
@@ -274,8 +280,8 @@ junos:
     - network/junos/junos_static_route.py
     - network/junos/junos_system.py
     - network/junos/junos_user.py
-    - network/junos/junos_vlan.py
     - network/junos/junos_vrf.py
+    - network/junos/junos_vlans.py
 #layer2:
 layer3:
     modules:
@@ -290,11 +296,19 @@ nso:
     - network/nso/nso_verify.py
 nxos:
     modules:
+    - network/nxos/_nxos_interface.py
+    - network/nxos/_nxos_ip_interface.py
+    - network/nxos/_nxos_linkagg.py
+    - network/nxos/_nxos_mtu.py
+    - network/nxos/_nxos_portchannel.py
+    - network/nxos/_nxos_switchport.py
+    - network/nxos/_nxos_vlan.py
     - network/nxos/nxos_aaa_server.py
     - network/nxos/nxos_aaa_server_host.py
     - network/nxos/nxos_acl.py
     - network/nxos/nxos_acl_interface.py
     - network/nxos/nxos_banner.py
+    - network/nxos/nxos_bfd_global.py
     - network/nxos/nxos_bgp.py
     - network/nxos/nxos_bgp_af.py
     - network/nxos/nxos_bgp_neighbor.py
@@ -313,11 +327,13 @@ nxos:
     - network/nxos/nxos_igmp_interface.py
     - network/nxos/nxos_igmp_snooping.py
     - network/nxos/nxos_install_os.py
-    - network/nxos/nxos_interface.py
     - network/nxos/nxos_interface_ospf.py
+    - network/nxos/nxos_interfaces.py
     - network/nxos/nxos_l2_interface.py
     - network/nxos/nxos_l3_interface.py
-    - network/nxos/nxos_linkagg.py
+    - network/nxos/nxos_lacp.py
+    - network/nxos/nxos_lacp_interfaces.py
+    - network/nxos/nxos_lag_interfaces.py
     - network/nxos/nxos_lldp.py
     - network/nxos/nxos_logging.py
     - network/nxos/nxos_ntp.py
@@ -344,10 +360,11 @@ nxos:
     - network/nxos/nxos_snmp_user.py
     - network/nxos/nxos_static_route.py
     - network/nxos/nxos_system.py
+    - network/nxos/nxos_telemetry.py
     - network/nxos/nxos_udld.py
     - network/nxos/nxos_udld_interface.py
     - network/nxos/nxos_user.py
-    - network/nxos/nxos_vlan.py
+    - network/nxos/nxos_vlans.py
     - network/nxos/nxos_vpc.py
     - network/nxos/nxos_vpc_interface.py
     - network/nxos/nxos_vrf.py
@@ -378,13 +395,16 @@ sros:
     - network/sros/sros_rollback.py
 vyos:
     modules:
+    - network/vyos/_vyos_interface.py
+    - network/vyos/_vyos_l3_interface.py
+    - network/vyos/_vyos_linkagg.py
     - network/vyos/vyos_banner.py
     - network/vyos/vyos_command.py
     - network/vyos/vyos_config.py
     - network/vyos/vyos_facts.py
-    - network/vyos/vyos_interface.py
-    - network/vyos/vyos_l3_interface.py
-    - network/vyos/vyos_linkagg.py
+    - network/vyos/vyos_interfaces.py
+    - network/vyos/vyos_l3_interfaces.py
+    - network/vyos/vyos_lag_interfaces.py
     - network/vyos/vyos_lldp.py
     - network/vyos/vyos_lldp_interface.py
     - network/vyos/vyos_logging.py
@@ -418,6 +438,7 @@ amazon:
     modules:
     - cloud/amazon/_aws_acm_facts.py
     - cloud/amazon/_aws_az_facts.py
+    - cloud/amazon/_aws_s3_bucket_facts.py
     - cloud/amazon/_aws_caller_facts.py
     - cloud/amazon/_aws_kms_facts.py
     - cloud/amazon/_aws_region_facts.py
@@ -496,7 +517,7 @@ amazon:
     - cloud/amazon/aws_kms_info.py
     - cloud/amazon/aws_region_info.py
     - cloud/amazon/aws_s3.py
-    - cloud/amazon/aws_s3_bucket_facts.py
+    - cloud/amazon/aws_s3_bucket_info.py
     - cloud/amazon/aws_s3_cors.py
     - cloud/amazon/aws_secret.py
     - cloud/amazon/aws_ses_identity.py
