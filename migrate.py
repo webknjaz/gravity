@@ -23,7 +23,7 @@ DEVEL_BRANCH = 'devel'
 
 VARDIR = os.environ.get('GRAVITY_VAR_DIR', '.cache')
 COLLECTION_NAMESPACE = 'ansible_collection'
-PLUGIN_EXCEPTION_PATHS = {'modules': 'lib/ansible/modules', 'module_utils': 'lib/ansible/module_utils'}
+PLUGIN_EXCEPTION_PATHS = {'modules': 'lib/ansible/modules', 'module_utils': 'lib/ansible/module_utils', 'lookups': 'lib/ansible/plugins/lookup'}
 
 
 def _run_command(cmd=None, check_rc=True):
@@ -240,7 +240,7 @@ def rewrite_imports_in_fst(mod_fst, import_map, collection, spec):
         try:
             token_length, exchange = match_import_src(imp_src, import_map)
         except LookupError:
-            continue
+            continue  # no matching imports
 
         if len(imp.targets.find_all('name_as_name', value='g:*Base')) > 0:
             continue  # Skip imports of Base classes
@@ -250,8 +250,9 @@ def rewrite_imports_in_fst(mod_fst, import_map, collection, spec):
         try:
             plugin_collection = get_plugin_collection(plugin_name, plugin_type, spec)
         except LookupError:
-            # plugin not in spec, assuming it stays in core and leaving as is
-            warnings.warn('Could not find "%s" in spec, assuming it stays in core' % plugin_name)
+            # plugin not in spec, assuming it stays in core and skipping
+            warnings.warn('Could not find "' + plugin_name + '" in spec, assuming it stays in core')
+            continue
 
         imp_src[:token_length] = exchange  # replace the import
         if plugin_collection != collection:
@@ -350,6 +351,9 @@ def assemble_collections(spec, args):
                         os.makedirs(dest_dir)
                 else:
                     dest = os.path.join(dest_plugin_base, os.path.basename(plugin))
+
+                if not os.path.exists(src):
+                    raise Exception('Spec specifies "%s" but file "%s" is not found in checkout' % (plugin, src))
 
                 plugin_data = read_text_from_file(src)
                 plugin_data_new = plugin_data[:]
