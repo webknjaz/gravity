@@ -62,6 +62,9 @@ aci:
     - network/aci/aci_vlan_pool.py
     - network/aci/aci_vlan_pool_encap_block.py
     - network/aci/aci_vrf.py
+    module_utils:
+    - network/aci/aci.py
+    - network/aci/mso.py
 bigip:
     modules:
     - network/f5/_bigip_device_facts.py
@@ -199,6 +202,18 @@ bigip:
     - network/f5/bigip_virtual_server.py
     - network/f5/bigip_vlan.py
     - network/f5/bigip_wait.py
+    module_utils:
+    - network/f5/bigip.py
+    - network/f5/bigiq.py
+    - network/f5/common.py
+    - network/f5/compare.py
+    - network/f5/icontrol.py
+    - network/f5/ipaddress.py
+    - network/f5/iworkflow.py
+    - network/f5/legacy.py
+    - network/f5/urls.py
+    terminal:
+    - bigip.py
 checkpoint:
     modules:
     - network/checkpoint/checkpoint_access_layer_facts.py
@@ -210,6 +225,8 @@ checkpoint:
     - network/checkpoint/checkpoint_run_script.py
     - network/checkpoint/checkpoint_session.py
     - network/checkpoint/checkpoint_task_facts.py
+    module_utils:
+    - network/checkpoint/checkpoint.py
 eos:
     modules:
     - network/eos/eos_banner.py
@@ -229,10 +246,35 @@ eos:
     - network/eos/eos_user.py
     - network/eos/eos_vlan.py
     - network/eos/eos_vrf.py
+    httpapi:
+    - eos.py
+    terminal:
+    - eos.py
+    module_utils:
+    - network/eos/argspec/interfaces/interfaces.py
+    - network/eos/argspec/facts/facts.py
+    - network/eos/providers/cli/config/bgp/neighbors.py
+    - network/eos/providers/cli/config/bgp/address_family.py
+    - network/eos/providers/cli/config/bgp/process.py
+    - network/eos/providers/module.py
+    - network/eos/providers/providers.py
+    - network/eos/config/interfaces/interfaces.py
+    - network/eos/eos.py
+    - network/eos/facts/facts.py
+    - network/eos/facts/interfaces/interfaces.py
+    - network/eos/facts/legacy/base.py
 frr:
     modules:
     - network/frr/frr_bgp.py
     - network/frr/frr_facts.py
+    module_utils:
+    - network/frr/frr.py
+    - network/frr/providers/cli/config/base.py
+    - network/frr/providers/cli/config/bgp/neighbors.py
+    - network/frr/providers/cli/config/bgp/address_family.py
+    - network/frr/providers/cli/config/bgp/process.py
+    - network/frr/providers/module.py
+    - network/frr/providers/providers.py
 ios:
     modules:
     - network/ios/ios_banner.py
@@ -253,8 +295,27 @@ ios:
     - network/ios/ios_user.py
     - network/ios/ios_vlan.py
     - network/ios/ios_vrf.py
+    module_utils:
+    - network/ios/ios.py
+    - network/ios/utils/utils.py
+    - network/ios/argspec/interfaces/interfaces.py
+    - network/ios/argspec/facts/facts.py
+    - network/ios/providers/cli/config/base.py
+    - network/ios/providers/cli/config/bgp/neighbors.py
+    - network/ios/providers/cli/config/bgp/address_family.py
+    - network/ios/providers/cli/config/bgp/process.py
+    - network/ios/providers/module.py
+    - network/ios/providers/providers.py
+    - network/ios/config/interfaces/interfaces.py
+    - network/ios/facts/facts.py
+    - network/ios/facts/interfaces/interfaces.py
+    - network/ios/facts/legacy/base.py
 #iosxr:
 junos:
+    netconf:
+    - junos.py
+    terminal:
+    - junos.py
     modules:
     - network/junos/_junos_linkagg.py
     - network/junos/_junos_l2_interface.py
@@ -282,6 +343,39 @@ junos:
     - network/junos/junos_user.py
     - network/junos/junos_vrf.py
     - network/junos/junos_vlans.py
+    module_utils:
+    - network/junos/utils/utils.py
+    - network/junos/argspec/l2_interfaces/l2_interfaces.py
+    - network/junos/argspec/lldp_global/lldp_global.py
+    - network/junos/argspec/interfaces/interfaces.py
+    - network/junos/argspec/lacp_interfaces/lacp_interfaces.py
+    - network/junos/argspec/vlans/vlans.py
+    - network/junos/argspec/lag_interfaces/lag_interfaces.py
+    - network/junos/argspec/l3_interfaces/l3_interfaces.py
+    - network/junos/argspec/lldp_interfaces/lldp_interfaces.py
+    - network/junos/argspec/lacp/lacp.py
+    - network/junos/argspec/facts/facts.py
+    - network/junos/junos.py
+    - network/junos/config/l2_interfaces/l2_interfaces.py
+    - network/junos/config/lldp_global/lldp_global.py
+    - network/junos/config/interfaces/interfaces.py
+    - network/junos/config/lacp_interfaces/lacp_interfaces.py
+    - network/junos/config/vlans/vlans.py
+    - network/junos/config/lag_interfaces/lag_interfaces.py
+    - network/junos/config/l3_interfaces/l3_interfaces.py
+    - network/junos/config/lldp_interfaces/lldp_interfaces.py
+    - network/junos/config/lacp/lacp.py
+    - network/junos/facts/facts.py
+    - network/junos/facts/l2_interfaces/l2_interfaces.py
+    - network/junos/facts/lldp_global/lldp_global.py
+    - network/junos/facts/interfaces/interfaces.py
+    - network/junos/facts/lacp_interfaces/lacp_interfaces.py
+    - network/junos/facts/vlans/vlans.py
+    - network/junos/facts/lag_interfaces/lag_interfaces.py
+    - network/junos/facts/l3_interfaces/l3_interfaces.py
+    - network/junos/facts/lldp_interfaces/lldp_interfaces.py
+    - network/junos/facts/lacp/lacp.py
+    - network/junos/facts/legacy/base.py
 #layer2:
 layer3:
     modules:
@@ -294,6 +388,8 @@ nso:
     - network/nso/nso_query.py
     - network/nso/nso_show.py
     - network/nso/nso_verify.py
+    module_utils:
+    - network/nso/nso.py
 nxos:
     modules:
     - network/nxos/_nxos_interface.py
@@ -376,6 +472,33 @@ nxos:
     - network/nxos/nxos_vtp_version.py
     - network/nxos/nxos_vxlan_vtep.py
     - network/nxos/nxos_vxlan_vtep_vni.py
+    module_utils:
+    - network/nxos/cmdref/telemetry/telemetry.py
+    - network/nxos/utils/utils.py
+    - network/nxos/utils/telemetry/telemetry.py
+    - network/nxos/nxos.py
+    - network/nxos/argspec/interfaces/interfaces.py
+    - network/nxos/argspec/lacp_interfaces/lacp_interfaces.py
+    - network/nxos/argspec/telemetry/telemetry.py
+    - network/nxos/argspec/vlans/vlans.py
+    - network/nxos/argspec/lag_interfaces/lag_interfaces.py
+    - network/nxos/argspec/lag_interfaces/__init__.py
+    - network/nxos/argspec/lacp/lacp.py
+    - network/nxos/argspec/facts/facts.py
+    - network/nxos/config/interfaces/interfaces.py
+    - network/nxos/config/lacp_interfaces/lacp_interfaces.py
+    - network/nxos/config/telemetry/telemetry.py
+    - network/nxos/config/vlans/vlans.py
+    - network/nxos/config/lag_interfaces/lag_interfaces.py
+    - network/nxos/config/lacp/lacp.py
+    - network/nxos/facts/facts.py
+    - network/nxos/facts/interfaces/interfaces.py
+    - network/nxos/facts/lacp_interfaces/lacp_interfaces.py
+    - network/nxos/facts/telemetry/telemetry.py
+    - network/nxos/facts/vlans/vlans.py
+    - network/nxos/facts/lag_interfaces/lag_interfaces.py
+    - network/nxos/facts/lacp/lacp.py
+    - network/nxos/facts/legacy/base.py
 ovs:
     modules:
     - network/ovs/openvswitch_bridge.py
@@ -386,6 +509,8 @@ skydive:
     - network/skydive/skydive_capture.py
     - network/skydive/skydive_edge.py
     - network/skydive/skydive_node.py
+    module_utils:
+    - network/skydive/api.py
     lookups:
     - skydive.py
 sros:
@@ -393,6 +518,8 @@ sros:
     - network/sros/sros_command.py
     - network/sros/sros_config.py
     - network/sros/sros_rollback.py
+    module_utils:
+    - network/sros/sros.py
 vyos:
     modules:
     - network/vyos/_vyos_interface.py
@@ -413,6 +540,21 @@ vyos:
     - network/vyos/vyos_system.py
     - network/vyos/vyos_user.py
     - network/vyos/vyos_vlan.py
+    module_utils:
+    - network/vyos/vyos.py
+    - network/vyos/utils/utils.py
+    - network/vyos/argspec/interfaces/interfaces.py
+    - network/vyos/argspec/lag_interfaces/lag_interfaces.py
+    - network/vyos/argspec/l3_interfaces/l3_interfaces.py
+    - network/vyos/argspec/facts/facts.py
+    - network/vyos/config/interfaces/interfaces.py
+    - network/vyos/config/lag_interfaces/lag_interfaces.py
+    - network/vyos/config/l3_interfaces/l3_interfaces.py
+    - network/vyos/facts/facts.py
+    - network/vyos/facts/interfaces/interfaces.py
+    - network/vyos/facts/lag_interfaces/lag_interfaces.py
+    - network/vyos/facts/l3_interfaces/l3_interfaces.py
+    - network/vyos/facts/legacy/base.py
 #nios:
 #cyberark:
 alicloud:
@@ -420,6 +562,8 @@ alicloud:
     - cloud/alicloud/_ali_instance_facts.py
     - cloud/alicloud/ali_instance.py
     - cloud/alicloud/ali_instance_info.py
+    module_utils:
+    - alicloud_ecs.py
 amazon:
     module_utils:
     - ec2.py
@@ -444,6 +588,7 @@ amazon:
     - cloud/amazon/_aws_region_facts.py
     - cloud/amazon/_aws_sgw_facts.py
     - cloud/amazon/_aws_waf_facts.py
+    - cloud/amazon/_cloudformation_facts.py
     - cloud/amazon/_cloudwatchlogs_log_group_facts.py
     - cloud/amazon/_ec2_ami_facts.py
     - cloud/amazon/_ec2_ami_find.py
@@ -530,7 +675,7 @@ amazon:
     - cloud/amazon/aws_waf_rule.py
     - cloud/amazon/aws_waf_web_acl.py
     - cloud/amazon/cloudformation.py
-    - cloud/amazon/cloudformation_facts.py
+    - cloud/amazon/cloudformation_info.py
     - cloud/amazon/cloudformation_stack_set.py
     - cloud/amazon/cloudfront_distribution.py
     - cloud/amazon/cloudfront_facts.py
@@ -846,6 +991,10 @@ azure:
     - cloud/azure/azure_rm_webapp.py
     - cloud/azure/azure_rm_webapp_facts.py
     - cloud/azure/azure_rm_webappslot.py
+    module_utils:
+    - azure_rm_common.py
+    - azure_rm_common_ext.py
+    - azure_rm_common_rest.py
 google:
     modules:
     - cloud/google/_gcdns_record.py
@@ -991,6 +1140,11 @@ google:
     - cloud/google/gcp_tpu_node_facts.py
     - cloud/google/gcpubsub.py
     - cloud/google/gcpubsub_info.py
+    module_utils:
+    - gcdns.py
+    - gce.py
+    - gcp.py
+    - gcp_utils.py
 vmware:
     modules:
     - cloud/vmware/_vsphere_guest.py
@@ -1116,6 +1270,10 @@ vmware:
     - cloud/vmware/vmware_vswitch_facts.py
     - cloud/vmware/vsphere_copy.py
     - cloud/vmware/vsphere_file.py
+    module_utils:
+    - vmware.py
+    - vmware_rest_client.py
+    - vmware_spbm.py
 #openstack:
 #ovirt:
 #kbevirt:
@@ -3198,7 +3356,6 @@ network:
     - enable.py
     httpapi:
     - checkpoint.py
-    - eos.py
     - exos.py
     - fortimanager.py
     - fortios.py
@@ -3230,13 +3387,11 @@ network:
     - ce.py
     - default.py
     - iosxr.py
-    - junos.py
     - sros.py
     terminal:
     - aireos.py
     - aruba.py
     - asa.py
-    - bigip.py
     - ce.py
     - cnos.py
     - dellos10.py
@@ -3245,7 +3400,6 @@ network:
     - edgeos.py
     - edgeswitch.py
     - enos.py
-    - eos.py
     - eric_eccli.py
     - exos.py
     - frr.py
@@ -3253,7 +3407,6 @@ network:
     - ios.py
     - iosxr.py
     - ironware.py
-    - junos.py
     - netvisor.py
     - nos.py
     - nxos.py
