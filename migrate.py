@@ -241,12 +241,8 @@ def rewrite_imports_in_fst(mod_fst, import_map, collection, spec):
         except LookupError:
             continue  # no matching imports
 
-        try:
-            if len(imp.targets.find_all('name_as_name', value='g:*Base')) > 0:
-                continue  # Skip imports of Base classes
-        except Exception:
-            logger.info('failing plugin with import: %s' % (imp))
-            raise
+        if len(imp.find_all('name_as_name', value='g:*Base')) > 0:
+            continue  # Skip imports of Base classes
 
         plugin_name = imp_src[-1].value
         plugin_type = imp_src[-2].value
