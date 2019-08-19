@@ -428,6 +428,10 @@ def mark_moved_resources(checkout_dir, collection, migrated_to_collection):
         migrated_secion = botmeta_files.get(macro_path)
         if not migrated_secion:
             migrated_secion = botmeta_files[macro_path] = {}
+        elif isinstance(migrated_secion, str):
+            migrated_secion = botmeta_files[macro_path] = {
+                'maintainers': migrated_secion,
+            }
 
         migrated_secion['close'] = close_related_issues
         migrated_secion['moved'] = moved_collection_url
