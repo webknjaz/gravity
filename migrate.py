@@ -250,7 +250,7 @@ def rewrite_imports_in_fst(mod_fst, import_map, collection, spec):
             plugin_collection = get_plugin_collection(plugin_name, plugin_type, spec)
         except LookupError:
             # plugin not in spec, assuming it stays in core and skipping
-            logger.info('Could not find "' + plugin_name + '" in spec, assuming it stays in core')
+            logger.info('Could not find "%s.%s" in spec, assuming it stays in core' % (plugin_type, plugin_name))
             continue
 
         imp_src[:token_length] = exchange  # replace the import
