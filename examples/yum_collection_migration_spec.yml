@@ -6,6 +6,9 @@ yum_collection:
   modules:
     - packaging/os/yum.py
 
+  module_utils:
+    - network/f5/bigip.py
+
   # adding more to test the rest of plugin types
   # missing networking ones for now
   become:
@@ -41,3 +44,4 @@ dep_collection1:
 dep_collection2:
   module_utils:
     - yumdnf.py
+    - network/f5/common.py
