@@ -589,6 +589,7 @@ amazon:
     - cloud/amazon/_aws_sgw_facts.py
     - cloud/amazon/_aws_waf_facts.py
     - cloud/amazon/_cloudformation_facts.py
+    - cloud/amazon/_cloudfront_facts.py
     - cloud/amazon/_cloudwatchlogs_log_group_facts.py
     - cloud/amazon/_ec2_ami_facts.py
     - cloud/amazon/_ec2_ami_find.py
@@ -618,7 +619,9 @@ amazon:
     - cloud/amazon/_ec2_vpc_subnet_facts.py
     - cloud/amazon/_ec2_vpc_vgw_facts.py
     - cloud/amazon/_ec2_vpc_vpn_facts.py
+    - cloud/amazon/_ecs_service_facts.py
     - cloud/amazon/_ecs_taskdefinition_facts.py
+    - cloud/amazon/_efs_facts.py
     - cloud/amazon/_elasticache_facts.py
     - cloud/amazon/_elb_application_lb_facts.py
     - cloud/amazon/_elb_classic_lb_facts.py
@@ -628,6 +631,7 @@ amazon:
     - cloud/amazon/_iam_mfa_device_facts.py
     - cloud/amazon/_iam_role_facts.py
     - cloud/amazon/_iam_server_certificate_facts.py
+    - cloud/amazon/_lambda_facts.py
     - cloud/amazon/_rds_instance_facts.py
     - cloud/amazon/_rds_snapshot_facts.py
     - cloud/amazon/_redshift_facts.py
@@ -678,7 +682,7 @@ amazon:
     - cloud/amazon/cloudformation_info.py
     - cloud/amazon/cloudformation_stack_set.py
     - cloud/amazon/cloudfront_distribution.py
-    - cloud/amazon/cloudfront_facts.py
+    - cloud/amazon/cloudfront_info.py
     - cloud/amazon/cloudfront_invalidation.py
     - cloud/amazon/cloudfront_origin_access_identity.py
     - cloud/amazon/cloudtrail.py
@@ -756,12 +760,12 @@ amazon:
     - cloud/amazon/ecs_cluster.py
     - cloud/amazon/ecs_ecr.py
     - cloud/amazon/ecs_service.py
-    - cloud/amazon/ecs_service_facts.py
+    - cloud/amazon/ecs_service_info.py
     - cloud/amazon/ecs_task.py
     - cloud/amazon/ecs_taskdefinition.py
     - cloud/amazon/ecs_taskdefinition_info.py
     - cloud/amazon/efs.py
-    - cloud/amazon/efs_facts.py
+    - cloud/amazon/efs_info.py
     - cloud/amazon/elasticache.py
     - cloud/amazon/elasticache_info.py
     - cloud/amazon/elasticache_parameter_group.py
@@ -793,7 +797,7 @@ amazon:
     - cloud/amazon/lambda.py
     - cloud/amazon/lambda_alias.py
     - cloud/amazon/lambda_event.py
-    - cloud/amazon/lambda_facts.py
+    - cloud/amazon/lambda_info.py
     - cloud/amazon/lambda_policy.py
     - cloud/amazon/lightsail.py
     - cloud/amazon/rds.py
@@ -1019,125 +1023,125 @@ google:
     - cloud/google/gce_snapshot.py
     - cloud/google/gce_tag.py
     - cloud/google/gcp_appengine_firewall_rule.py
-    - cloud/google/gcp_appengine_firewall_rule_facts.py
+    - cloud/google/gcp_appengine_firewall_rule_info.py
     - cloud/google/gcp_bigquery_dataset.py
-    - cloud/google/gcp_bigquery_dataset_facts.py
+    - cloud/google/gcp_bigquery_dataset_info.py
     - cloud/google/gcp_bigquery_table.py
-    - cloud/google/gcp_bigquery_table_facts.py
+    - cloud/google/gcp_bigquery_table_info.py
     - cloud/google/gcp_cloudbuild_trigger.py
-    - cloud/google/gcp_cloudbuild_trigger_facts.py
+    - cloud/google/gcp_cloudbuild_trigger_info.py
     - cloud/google/gcp_cloudscheduler_job.py
-    - cloud/google/gcp_cloudscheduler_job_facts.py
+    - cloud/google/gcp_cloudscheduler_job_info.py
     - cloud/google/gcp_cloudtasks_queue.py
-    - cloud/google/gcp_cloudtasks_queue_facts.py
+    - cloud/google/gcp_cloudtasks_queue_info.py
     - cloud/google/gcp_compute_address.py
-    - cloud/google/gcp_compute_address_facts.py
+    - cloud/google/gcp_compute_address_info.py
     - cloud/google/gcp_compute_autoscaler.py
     - cloud/google/gcp_compute_backend_bucket.py
-    - cloud/google/gcp_compute_backend_bucket_facts.py
+    - cloud/google/gcp_compute_backend_bucket_info.py
     - cloud/google/gcp_compute_backend_service.py
-    - cloud/google/gcp_compute_backend_service_facts.py
+    - cloud/google/gcp_compute_backend_service_info.py
     - cloud/google/gcp_compute_disk.py
-    - cloud/google/gcp_compute_disk_facts.py
+    - cloud/google/gcp_compute_disk_info.py
     - cloud/google/gcp_compute_firewall.py
-    - cloud/google/gcp_compute_firewall_facts.py
+    - cloud/google/gcp_compute_firewall_info.py
     - cloud/google/gcp_compute_forwarding_rule.py
-    - cloud/google/gcp_compute_forwarding_rule_facts.py
+    - cloud/google/gcp_compute_forwarding_rule_info.py
     - cloud/google/gcp_compute_global_address.py
-    - cloud/google/gcp_compute_global_address_facts.py
+    - cloud/google/gcp_compute_global_address_info.py
     - cloud/google/gcp_compute_global_forwarding_rule.py
-    - cloud/google/gcp_compute_global_forwarding_rule_facts.py
+    - cloud/google/gcp_compute_global_forwarding_rule_info.py
     - cloud/google/gcp_compute_health_check.py
-    - cloud/google/gcp_compute_health_check_facts.py
+    - cloud/google/gcp_compute_health_check_info.py
     - cloud/google/gcp_compute_http_health_check.py
-    - cloud/google/gcp_compute_http_health_check_facts.py
+    - cloud/google/gcp_compute_http_health_check_info.py
     - cloud/google/gcp_compute_https_health_check.py
-    - cloud/google/gcp_compute_https_health_check_facts.py
+    - cloud/google/gcp_compute_https_health_check_info.py
     - cloud/google/gcp_compute_image.py
-    - cloud/google/gcp_compute_image_facts.py
+    - cloud/google/gcp_compute_image_info.py
     - cloud/google/gcp_compute_instance.py
-    - cloud/google/gcp_compute_instance_facts.py
+    - cloud/google/gcp_compute_instance_info.py
     - cloud/google/gcp_compute_instance_group.py
-    - cloud/google/gcp_compute_instance_group_facts.py
+    - cloud/google/gcp_compute_instance_group_info.py
     - cloud/google/gcp_compute_instance_group_manager.py
-    - cloud/google/gcp_compute_instance_group_manager_facts.py
+    - cloud/google/gcp_compute_instance_group_manager_info.py
     - cloud/google/gcp_compute_instance_template.py
-    - cloud/google/gcp_compute_instance_template_facts.py
+    - cloud/google/gcp_compute_instance_template_info.py
     - cloud/google/gcp_compute_interconnect_attachment.py
-    - cloud/google/gcp_compute_interconnect_attachment_facts.py
+    - cloud/google/gcp_compute_interconnect_attachment_info.py
     - cloud/google/gcp_compute_network.py
-    - cloud/google/gcp_compute_network_facts.py
+    - cloud/google/gcp_compute_network_info.py
     - cloud/google/gcp_compute_region_disk.py
-    - cloud/google/gcp_compute_region_disk_facts.py
+    - cloud/google/gcp_compute_region_disk_info.py
     - cloud/google/gcp_compute_route.py
-    - cloud/google/gcp_compute_route_facts.py
+    - cloud/google/gcp_compute_route_info.py
     - cloud/google/gcp_compute_router.py
-    - cloud/google/gcp_compute_router_facts.py
+    - cloud/google/gcp_compute_router_info.py
     - cloud/google/gcp_compute_snapshot.py
     - cloud/google/gcp_compute_ssl_certificate.py
-    - cloud/google/gcp_compute_ssl_certificate_facts.py
+    - cloud/google/gcp_compute_ssl_certificate_info.py
     - cloud/google/gcp_compute_ssl_policy.py
-    - cloud/google/gcp_compute_ssl_policy_facts.py
+    - cloud/google/gcp_compute_ssl_policy_info.py
     - cloud/google/gcp_compute_subnetwork.py
-    - cloud/google/gcp_compute_subnetwork_facts.py
+    - cloud/google/gcp_compute_subnetwork_info.py
     - cloud/google/gcp_compute_target_http_proxy.py
-    - cloud/google/gcp_compute_target_http_proxy_facts.py
+    - cloud/google/gcp_compute_target_http_proxy_info.py
     - cloud/google/gcp_compute_target_https_proxy.py
-    - cloud/google/gcp_compute_target_https_proxy_facts.py
+    - cloud/google/gcp_compute_target_https_proxy_info.py
     - cloud/google/gcp_compute_target_pool.py
-    - cloud/google/gcp_compute_target_pool_facts.py
+    - cloud/google/gcp_compute_target_pool_info.py
     - cloud/google/gcp_compute_target_ssl_proxy.py
-    - cloud/google/gcp_compute_target_ssl_proxy_facts.py
+    - cloud/google/gcp_compute_target_ssl_proxy_info.py
     - cloud/google/gcp_compute_target_tcp_proxy.py
-    - cloud/google/gcp_compute_target_tcp_proxy_facts.py
+    - cloud/google/gcp_compute_target_tcp_proxy_info.py
     - cloud/google/gcp_compute_target_vpn_gateway.py
-    - cloud/google/gcp_compute_target_vpn_gateway_facts.py
+    - cloud/google/gcp_compute_target_vpn_gateway_info.py
     - cloud/google/gcp_compute_url_map.py
-    - cloud/google/gcp_compute_url_map_facts.py
+    - cloud/google/gcp_compute_url_map_info.py
     - cloud/google/gcp_compute_vpn_tunnel.py
-    - cloud/google/gcp_compute_vpn_tunnel_facts.py
+    - cloud/google/gcp_compute_vpn_tunnel_info.py
     - cloud/google/gcp_container_cluster.py
-    - cloud/google/gcp_container_cluster_facts.py
+    - cloud/google/gcp_container_cluster_info.py
     - cloud/google/gcp_container_node_pool.py
-    - cloud/google/gcp_container_node_pool_facts.py
+    - cloud/google/gcp_container_node_pool_info.py
     - cloud/google/gcp_dns_managed_zone.py
-    - cloud/google/gcp_dns_managed_zone_facts.py
+    - cloud/google/gcp_dns_managed_zone_info.py
     - cloud/google/gcp_dns_resource_record_set.py
-    - cloud/google/gcp_dns_resource_record_set_facts.py
+    - cloud/google/gcp_dns_resource_record_set_info.py
     - cloud/google/gcp_iam_role.py
-    - cloud/google/gcp_iam_role_facts.py
+    - cloud/google/gcp_iam_role_info.py
     - cloud/google/gcp_iam_service_account.py
-    - cloud/google/gcp_iam_service_account_facts.py
+    - cloud/google/gcp_iam_service_account_info.py
     - cloud/google/gcp_iam_service_account_key.py
     - cloud/google/gcp_mlengine_model.py
-    - cloud/google/gcp_mlengine_model_facts.py
+    - cloud/google/gcp_mlengine_model_info.py
     - cloud/google/gcp_mlengine_version.py
-    - cloud/google/gcp_mlengine_version_facts.py
+    - cloud/google/gcp_mlengine_version_info.py
     - cloud/google/gcp_pubsub_subscription.py
-    - cloud/google/gcp_pubsub_subscription_facts.py
+    - cloud/google/gcp_pubsub_subscription_info.py
     - cloud/google/gcp_pubsub_topic.py
-    - cloud/google/gcp_pubsub_topic_facts.py
+    - cloud/google/gcp_pubsub_topic_info.py
     - cloud/google/gcp_redis_instance.py
-    - cloud/google/gcp_redis_instance_facts.py
+    - cloud/google/gcp_redis_instance_info.py
     - cloud/google/gcp_resourcemanager_project.py
-    - cloud/google/gcp_resourcemanager_project_facts.py
+    - cloud/google/gcp_resourcemanager_project_info.py
     - cloud/google/gcp_sourcerepo_repository.py
-    - cloud/google/gcp_sourcerepo_repository_facts.py
+    - cloud/google/gcp_sourcerepo_repository_info.py
     - cloud/google/gcp_spanner_database.py
-    - cloud/google/gcp_spanner_database_facts.py
+    - cloud/google/gcp_spanner_database_info.py
     - cloud/google/gcp_spanner_instance.py
-    - cloud/google/gcp_spanner_instance_facts.py
+    - cloud/google/gcp_spanner_instance_info.py
     - cloud/google/gcp_sql_database.py
-    - cloud/google/gcp_sql_database_facts.py
+    - cloud/google/gcp_sql_database_info.py
     - cloud/google/gcp_sql_instance.py
-    - cloud/google/gcp_sql_instance_facts.py
+    - cloud/google/gcp_sql_instance_info.py
     - cloud/google/gcp_sql_user.py
-    - cloud/google/gcp_sql_user_facts.py
+    - cloud/google/gcp_sql_user_info.py
     - cloud/google/gcp_storage_bucket.py
     - cloud/google/gcp_storage_bucket_access_control.py
     - cloud/google/gcp_storage_object.py
     - cloud/google/gcp_tpu_node.py
-    - cloud/google/gcp_tpu_node_facts.py
+    - cloud/google/gcp_tpu_node_info.py
     - cloud/google/gcpubsub.py
     - cloud/google/gcpubsub_info.py
     module_utils:
@@ -1335,7 +1339,6 @@ community:
     - qubes.py
     - iocage.py
     - podman.py
-    - funcd.py
     - libvirt_lxc.py
     lookup:
     - _openshift.py
@@ -1380,232 +1383,6 @@ community:
     - k8s.py
     - network.py
     modules:
-    - cloud/amazon/_aws_acm_facts.py
-    - cloud/amazon/_aws_az_facts.py
-    - cloud/amazon/_aws_caller_facts.py
-    - cloud/amazon/_aws_kms_facts.py
-    - cloud/amazon/_aws_region_facts.py
-    - cloud/amazon/_aws_sgw_facts.py
-    - cloud/amazon/_aws_waf_facts.py
-    - cloud/amazon/_cloudwatchlogs_log_group_facts.py
-    - cloud/amazon/_ec2_ami_facts.py
-    - cloud/amazon/_ec2_ami_find.py
-    - cloud/amazon/_ec2_ami_search.py
-    - cloud/amazon/_ec2_asg_facts.py
-    - cloud/amazon/_ec2_customer_gateway_facts.py
-    - cloud/amazon/_ec2_eip_facts.py
-    - cloud/amazon/_ec2_elb_facts.py
-    - cloud/amazon/_ec2_eni_facts.py
-    - cloud/amazon/_ec2_facts.py
-    - cloud/amazon/_ec2_group_facts.py
-    - cloud/amazon/_ec2_instance_facts.py
-    - cloud/amazon/_ec2_lc_facts.py
-    - cloud/amazon/_ec2_placement_group_facts.py
-    - cloud/amazon/_ec2_remote_facts.py
-    - cloud/amazon/_ec2_snapshot_facts.py
-    - cloud/amazon/_ec2_vol_facts.py
-    - cloud/amazon/_ec2_vpc.py
-    - cloud/amazon/_ec2_vpc_dhcp_option_facts.py
-    - cloud/amazon/_ec2_vpc_endpoint_facts.py
-    - cloud/amazon/_ec2_vpc_igw_facts.py
-    - cloud/amazon/_ec2_vpc_nacl_facts.py
-    - cloud/amazon/_ec2_vpc_nat_gateway_facts.py
-    - cloud/amazon/_ec2_vpc_peering_facts.py
-    - cloud/amazon/_ec2_vpc_route_table_facts.py
-    - cloud/amazon/_ec2_vpc_vgw_facts.py
-    - cloud/amazon/_ec2_vpc_vpn_facts.py
-    - cloud/amazon/_ecs_taskdefinition_facts.py
-    - cloud/amazon/_elasticache_facts.py
-    - cloud/amazon/_elb_application_lb_facts.py
-    - cloud/amazon/_elb_classic_lb_facts.py
-    - cloud/amazon/_elb_target_facts.py
-    - cloud/amazon/_elb_target_group_facts.py
-    - cloud/amazon/_iam_cert_facts.py
-    - cloud/amazon/_iam_mfa_device_facts.py
-    - cloud/amazon/_iam_role_facts.py
-    - cloud/amazon/_iam_server_certificate_facts.py
-    - cloud/amazon/_rds_instance_facts.py
-    - cloud/amazon/_rds_snapshot_facts.py
-    - cloud/amazon/_redshift_facts.py
-    - cloud/amazon/_route53_facts.py
-    - cloud/amazon/_s3.py
-    - cloud/amazon/aws_acm_info.py
-    - cloud/amazon/aws_api_gateway.py
-    - cloud/amazon/aws_application_scaling_policy.py
-    - cloud/amazon/aws_az_info.py
-    - cloud/amazon/aws_batch_compute_environment.py
-    - cloud/amazon/aws_batch_job_definition.py
-    - cloud/amazon/aws_batch_job_queue.py
-    - cloud/amazon/aws_caller_info.py
-    - cloud/amazon/aws_codebuild.py
-    - cloud/amazon/aws_codecommit.py
-    - cloud/amazon/aws_codepipeline.py
-    - cloud/amazon/aws_config_aggregation_authorization.py
-    - cloud/amazon/aws_config_aggregator.py
-    - cloud/amazon/aws_config_delivery_channel.py
-    - cloud/amazon/aws_config_recorder.py
-    - cloud/amazon/aws_config_rule.py
-    - cloud/amazon/aws_direct_connect_connection.py
-    - cloud/amazon/aws_direct_connect_gateway.py
-    - cloud/amazon/aws_direct_connect_link_aggregation_group.py
-    - cloud/amazon/aws_direct_connect_virtual_interface.py
-    - cloud/amazon/aws_eks_cluster.py
-    - cloud/amazon/aws_elasticbeanstalk_app.py
-    - cloud/amazon/aws_glue_connection.py
-    - cloud/amazon/aws_glue_job.py
-    - cloud/amazon/aws_inspector_target.py
-    - cloud/amazon/aws_kms.py
-    - cloud/amazon/aws_kms_info.py
-    - cloud/amazon/aws_region_info.py
-    - cloud/amazon/aws_s3_bucket_facts.py
-    - cloud/amazon/aws_s3_cors.py
-    - cloud/amazon/aws_secret.py
-    - cloud/amazon/aws_ses_identity.py
-    - cloud/amazon/aws_ses_identity_policy.py
-    - cloud/amazon/aws_ses_rule_set.py
-    - cloud/amazon/aws_sgw_info.py
-    - cloud/amazon/aws_ssm_parameter_store.py
-    - cloud/amazon/aws_waf_condition.py
-    - cloud/amazon/aws_waf_info.py
-    - cloud/amazon/aws_waf_rule.py
-    - cloud/amazon/aws_waf_web_acl.py
-    - cloud/amazon/cloudformation_facts.py
-    - cloud/amazon/cloudformation_stack_set.py
-    - cloud/amazon/cloudfront_distribution.py
-    - cloud/amazon/cloudfront_facts.py
-    - cloud/amazon/cloudfront_invalidation.py
-    - cloud/amazon/cloudfront_origin_access_identity.py
-    - cloud/amazon/cloudtrail.py
-    - cloud/amazon/cloudwatchevent_rule.py
-    - cloud/amazon/cloudwatchlogs_log_group.py
-    - cloud/amazon/cloudwatchlogs_log_group_info.py
-    - cloud/amazon/data_pipeline.py
-    - cloud/amazon/dms_endpoint.py
-    - cloud/amazon/dms_replication_subnet_group.py
-    - cloud/amazon/dynamodb_table.py
-    - cloud/amazon/dynamodb_ttl.py
-    - cloud/amazon/ec2_ami.py
-    - cloud/amazon/ec2_ami_copy.py
-    - cloud/amazon/ec2_ami_info.py
-    - cloud/amazon/ec2_asg.py
-    - cloud/amazon/ec2_asg_info.py
-    - cloud/amazon/ec2_asg_lifecycle_hook.py
-    - cloud/amazon/ec2_customer_gateway.py
-    - cloud/amazon/ec2_customer_gateway_info.py
-    - cloud/amazon/ec2_eip.py
-    - cloud/amazon/ec2_eip_info.py
-    - cloud/amazon/ec2_elb.py
-    - cloud/amazon/ec2_elb_info.py
-    - cloud/amazon/ec2_elb_lb.py
-    - cloud/amazon/ec2_eni.py
-    - cloud/amazon/ec2_eni_info.py
-    - cloud/amazon/ec2_group_info.py
-    - cloud/amazon/ec2_instance.py
-    - cloud/amazon/ec2_instance_info.py
-    - cloud/amazon/ec2_key.py
-    - cloud/amazon/ec2_launch_template.py
-    - cloud/amazon/ec2_lc.py
-    - cloud/amazon/ec2_lc_find.py
-    - cloud/amazon/ec2_lc_info.py
-    - cloud/amazon/ec2_metric_alarm.py
-    - cloud/amazon/ec2_placement_group.py
-    - cloud/amazon/ec2_placement_group_info.py
-    - cloud/amazon/ec2_scaling_policy.py
-    - cloud/amazon/ec2_snapshot_copy.py
-    - cloud/amazon/ec2_snapshot_info.py
-    - cloud/amazon/ec2_tag.py
-    - cloud/amazon/ec2_transit_gateway.py
-    - cloud/amazon/ec2_transit_gateway_info.py
-    - cloud/amazon/ec2_vol_info.py
-    - cloud/amazon/ec2_vpc_dhcp_option.py
-    - cloud/amazon/ec2_vpc_dhcp_option_info.py
-    - cloud/amazon/ec2_vpc_egress_igw.py
-    - cloud/amazon/ec2_vpc_endpoint.py
-    - cloud/amazon/ec2_vpc_endpoint_info.py
-    - cloud/amazon/ec2_vpc_igw.py
-    - cloud/amazon/ec2_vpc_igw_info.py
-    - cloud/amazon/ec2_vpc_nacl.py
-    - cloud/amazon/ec2_vpc_nacl_info.py
-    - cloud/amazon/ec2_vpc_nat_gateway.py
-    - cloud/amazon/ec2_vpc_nat_gateway_info.py
-    - cloud/amazon/ec2_vpc_peer.py
-    - cloud/amazon/ec2_vpc_peering_info.py
-    - cloud/amazon/ec2_vpc_route_table.py
-    - cloud/amazon/ec2_vpc_route_table_info.py
-    - cloud/amazon/ec2_vpc_vgw.py
-    - cloud/amazon/ec2_vpc_vgw_info.py
-    - cloud/amazon/ec2_vpc_vpn.py
-    - cloud/amazon/ec2_vpc_vpn_info.py
-    - cloud/amazon/ec2_win_password.py
-    - cloud/amazon/ecs_attribute.py
-    - cloud/amazon/ecs_cluster.py
-    - cloud/amazon/ecs_ecr.py
-    - cloud/amazon/ecs_service.py
-    - cloud/amazon/ecs_service_facts.py
-    - cloud/amazon/ecs_task.py
-    - cloud/amazon/ecs_taskdefinition.py
-    - cloud/amazon/ecs_taskdefinition_info.py
-    - cloud/amazon/efs.py
-    - cloud/amazon/efs_facts.py
-    - cloud/amazon/elasticache.py
-    - cloud/amazon/elasticache_info.py
-    - cloud/amazon/elasticache_parameter_group.py
-    - cloud/amazon/elasticache_snapshot.py
-    - cloud/amazon/elasticache_subnet_group.py
-    - cloud/amazon/elb_application_lb.py
-    - cloud/amazon/elb_application_lb_info.py
-    - cloud/amazon/elb_classic_lb.py
-    - cloud/amazon/elb_classic_lb_info.py
-    - cloud/amazon/elb_instance.py
-    - cloud/amazon/elb_network_lb.py
-    - cloud/amazon/elb_target.py
-    - cloud/amazon/elb_target_group.py
-    - cloud/amazon/elb_target_group_info.py
-    - cloud/amazon/elb_target_info.py
-    - cloud/amazon/execute_lambda.py
-    - cloud/amazon/iam.py
-    - cloud/amazon/iam_cert.py
-    - cloud/amazon/iam_group.py
-    - cloud/amazon/iam_managed_policy.py
-    - cloud/amazon/iam_mfa_device_info.py
-    - cloud/amazon/iam_password_policy.py
-    - cloud/amazon/iam_policy.py
-    - cloud/amazon/iam_role.py
-    - cloud/amazon/iam_role_info.py
-    - cloud/amazon/iam_server_certificate_info.py
-    - cloud/amazon/iam_user.py
-    - cloud/amazon/kinesis_stream.py
-    - cloud/amazon/lambda.py
-    - cloud/amazon/lambda_alias.py
-    - cloud/amazon/lambda_event.py
-    - cloud/amazon/lambda_facts.py
-    - cloud/amazon/lambda_policy.py
-    - cloud/amazon/lightsail.py
-    - cloud/amazon/rds.py
-    - cloud/amazon/rds_instance.py
-    - cloud/amazon/rds_instance_info.py
-    - cloud/amazon/rds_param_group.py
-    - cloud/amazon/rds_snapshot.py
-    - cloud/amazon/rds_snapshot_info.py
-    - cloud/amazon/rds_subnet_group.py
-    - cloud/amazon/redshift.py
-    - cloud/amazon/redshift_cross_region_snapshots.py
-    - cloud/amazon/redshift_info.py
-    - cloud/amazon/redshift_subnet_group.py
-    - cloud/amazon/route53.py
-    - cloud/amazon/route53_health_check.py
-    - cloud/amazon/route53_info.py
-    - cloud/amazon/route53_zone.py
-    - cloud/amazon/s3_bucket_notification.py
-    - cloud/amazon/s3_lifecycle.py
-    - cloud/amazon/s3_logging.py
-    - cloud/amazon/s3_sync.py
-    - cloud/amazon/s3_website.py
-    - cloud/amazon/sns.py
-    - cloud/amazon/sns_topic.py
-    - cloud/amazon/sqs_queue.py
-    - cloud/amazon/sts_assume_role.py
-    - cloud/amazon/sts_session_token.py
     - cloud/atomic/atomic_container.py
     - cloud/atomic/atomic_host.py
     - cloud/atomic/atomic_image.py
@@ -1706,7 +1483,7 @@ community:
     - cloud/digital_ocean/digital_ocean_size_info.py
     - cloud/digital_ocean/digital_ocean_snapshot_info.py
     - cloud/digital_ocean/digital_ocean_sshkey.py
-    - cloud/digital_ocean/digital_ocean_sshkey_facts.py
+    - cloud/digital_ocean/digital_ocean_sshkey_info.py
     - cloud/digital_ocean/digital_ocean_tag.py
     - cloud/digital_ocean/digital_ocean_tag_info.py
     - cloud/digital_ocean/digital_ocean_volume_info.py
