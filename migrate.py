@@ -244,8 +244,11 @@ def rewrite_imports_in_fst(mod_fst, import_map, collection, spec):
         if len(imp.find_all('name_as_name', value='g:*Base')) > 0:
             continue  # Skip imports of Base classes
 
-        plugin_name = imp_src[-1].value
-        plugin_type = imp_src[-2].value
+        plugin_name = [imp_src[idx].value for idx in range(token_length, len(imp_src))]
+        plugin_name = '/'.join(plugin_name)
+        # assumes ansible.plugin_name (e.g. ansible.module_utils, ansible.plugins) needs FIXME if we use this for units
+        plugin_type = imp_src[1].value
+
         try:
             plugin_collection = get_plugin_collection(plugin_name, plugin_type, spec)
         except LookupError:
