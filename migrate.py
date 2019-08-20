@@ -25,6 +25,17 @@ COLLECTION_NAMESPACE = 'ansible_collection'
 PLUGIN_EXCEPTION_PATHS = {'modules': 'lib/ansible/modules', 'module_utils': 'lib/ansible/module_utils', 'lookups': 'lib/ansible/plugins/lookup'}
 
 
+core = {}
+
+def add_core(ptype, name):
+
+    global core
+    if ptype not in core:
+        core[ptype] = set()
+
+    core[ptype].add(name)
+
+
 def _run_command(cmd=None, check_rc=True):
     logger.debug(cmd)
     if not isinstance(cmd, bytes):
@@ -159,7 +170,7 @@ def get_plugin_collection(plugin_name, plugin_type, spec):
             if plugin_name + '.py' in plugins:
                 return collection
 
-    raise LookupError('Could not find %s %s in any collection specified in the spec %s' % (plugin_name, plugin_type, spec))
+    raise LookupError('Could not find pluging "%s" of type "%s" in any collection in the spec' % (plugin_name.replace('/', '.'), plugin_type))
 
 
 def rewrite_doc_fragments(plugin_data, collection, spec, args):
@@ -255,9 +266,10 @@ def rewrite_imports_in_fst(mod_fst, import_map, collection, spec):
 
         try:
             plugin_collection = get_plugin_collection(plugin_name, plugin_type, spec)
-        except LookupError:
+        except LookupError as e:
             # plugin not in spec, assuming it stays in core and skipping
-            logger.info('Could not find "%s.%s" in spec, assuming it stays in core' % (plugin_type, plugin_name.replace('/', '.')))
+            logger.debug('%s. Assuming it stays in core' % str(e))
+            add_core(plugin_type, plugin_name.replace('/', '.'))
             continue
 
         if plugin_collection.startswith('_'):
@@ -605,6 +617,9 @@ def main():
     # doeet
     assemble_collections(spec, args)
 
+    global core
+    print('======= Assumed stayed in core =======\n')
+    print(yaml.dump(core))
 
 if __name__ == "__main__":
     main()
