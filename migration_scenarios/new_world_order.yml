@@ -1,3 +1,9 @@
+_core:
+    module_utils:
+    - _text.py
+    - basic.py
+    - six.py
+    - urls.py
 aci:
     modules:
     - network/aci/aci_aaa_user.py
@@ -62,6 +68,38 @@ aci:
     - network/aci/aci_vlan_pool.py
     - network/aci/aci_vlan_pool_encap_block.py
     - network/aci/aci_vrf.py
+    - network/aci/mso_label.py
+    - network/aci/mso_role.py
+    - network/aci/mso_schema.py
+    - network/aci/mso_schema_site.py
+    - network/aci/mso_schema_site_anp.py
+    - network/aci/mso_schema_site_anp_epg.py
+    - network/aci/mso_schema_site_anp_epg_staticleaf.py
+    - network/aci/mso_schema_site_anp_epg_staticport.py
+    - network/aci/mso_schema_site_anp_epg_subnet.py
+    - network/aci/mso_schema_site_bd.py
+    - network/aci/mso_schema_site_bd_l3out.py
+    - network/aci/mso_schema_site_bd_subnet.py
+    - network/aci/mso_schema_site_vrf.py
+    - network/aci/mso_schema_site_vrf_region.py
+    - network/aci/mso_schema_site_vrf_region_cidr.py
+    - network/aci/mso_schema_site_vrf_region_cidr_subnet.py
+    - network/aci/mso_schema_template.py
+    - network/aci/mso_schema_template_anp.py
+    - network/aci/mso_schema_template_anp_epg.py
+    - network/aci/mso_schema_template_anp_epg_contract.py
+    - network/aci/mso_schema_template_anp_epg_subnet.py
+    - network/aci/mso_schema_template_bd.py
+    - network/aci/mso_schema_template_bd_subnet.py
+    - network/aci/mso_schema_template_contract_filter.py
+    - network/aci/mso_schema_template_deploy.py
+    - network/aci/mso_schema_template_externalepg.py
+    - network/aci/mso_schema_template_filter_entry.py
+    - network/aci/mso_schema_template_l3out.py
+    - network/aci/mso_schema_template_vrf.py
+    - network/aci/mso_site.py
+    - network/aci/mso_tenant.py
+    - network/aci/mso_user.py
     module_utils:
     - network/aci/aci.py
     - network/aci/mso.py
@@ -1278,6 +1316,46 @@ vmware:
     - vmware.py
     - vmware_rest_client.py
     - vmware_spbm.py
+vultr:
+    modules:
+    - cloud/vultr/_vr_account_facts.py
+    - cloud/vultr/_vr_dns_domain.py
+    - cloud/vultr/_vr_dns_record.py
+    - cloud/vultr/_vr_firewall_group.py
+    - cloud/vultr/_vr_firewall_rule.py
+    - cloud/vultr/_vr_server.py
+    - cloud/vultr/_vr_ssh_key.py
+    - cloud/vultr/_vr_startup_script.py
+    - cloud/vultr/_vr_user.py
+    - cloud/vultr/_vultr_account_facts.py
+    - cloud/vultr/_vultr_block_storage_facts.py
+    - cloud/vultr/_vultr_os_facts.py
+    - cloud/vultr/_vultr_ssh_key_facts.py
+    - cloud/vultr/_vultr_user_facts.py
+    - cloud/vultr/vultr_account_info.py
+    - cloud/vultr/vultr_block_storage.py
+    - cloud/vultr/vultr_block_storage_info.py
+    - cloud/vultr/vultr_dns_domain.py
+    - cloud/vultr/vultr_dns_domain_facts.py
+    - cloud/vultr/vultr_dns_record.py
+    - cloud/vultr/vultr_firewall_group.py
+    - cloud/vultr/vultr_firewall_group_facts.py
+    - cloud/vultr/vultr_firewall_rule.py
+    - cloud/vultr/vultr_network.py
+    - cloud/vultr/vultr_network_facts.py
+    - cloud/vultr/vultr_os_info.py
+    - cloud/vultr/vultr_plan_facts.py
+    - cloud/vultr/vultr_region_facts.py
+    - cloud/vultr/vultr_server.py
+    - cloud/vultr/vultr_server_facts.py
+    - cloud/vultr/vultr_ssh_key.py
+    - cloud/vultr/vultr_ssh_key_info.py
+    - cloud/vultr/vultr_startup_script.py
+    - cloud/vultr/vultr_startup_script_facts.py
+    - cloud/vultr/vultr_user.py
+    - cloud/vultr/vultr_user_info.py
+    module_utils:
+    - vultr.py
 #openstack:
 #ovirt:
 #kbevirt:
@@ -1750,41 +1828,6 @@ community:
     - cloud/univention/udm_group.py
     - cloud/univention/udm_share.py
     - cloud/univention/udm_user.py
-    - cloud/vultr/_vr_account_facts.py
-    - cloud/vultr/_vr_dns_domain.py
-    - cloud/vultr/_vr_dns_record.py
-    - cloud/vultr/_vr_firewall_group.py
-    - cloud/vultr/_vr_firewall_rule.py
-    - cloud/vultr/_vr_server.py
-    - cloud/vultr/_vr_ssh_key.py
-    - cloud/vultr/_vr_startup_script.py
-    - cloud/vultr/_vr_user.py
-    - cloud/vultr/_vultr_account_facts.py
-    - cloud/vultr/_vultr_os_facts.py
-    - cloud/vultr/_vultr_ssh_key_facts.py
-    - cloud/vultr/_vultr_user_facts.py
-    - cloud/vultr/vultr_account_info.py
-    - cloud/vultr/vultr_block_storage.py
-    - cloud/vultr/vultr_block_storage_facts.py
-    - cloud/vultr/vultr_dns_domain.py
-    - cloud/vultr/vultr_dns_domain_facts.py
-    - cloud/vultr/vultr_dns_record.py
-    - cloud/vultr/vultr_firewall_group.py
-    - cloud/vultr/vultr_firewall_group_facts.py
-    - cloud/vultr/vultr_firewall_rule.py
-    - cloud/vultr/vultr_network.py
-    - cloud/vultr/vultr_network_facts.py
-    - cloud/vultr/vultr_os_info.py
-    - cloud/vultr/vultr_plan_facts.py
-    - cloud/vultr/vultr_region_facts.py
-    - cloud/vultr/vultr_server.py
-    - cloud/vultr/vultr_server_facts.py
-    - cloud/vultr/vultr_ssh_key.py
-    - cloud/vultr/vultr_ssh_key_info.py
-    - cloud/vultr/vultr_startup_script.py
-    - cloud/vultr/vultr_startup_script_facts.py
-    - cloud/vultr/vultr_user.py
-    - cloud/vultr/vultr_user_info.py
     - cloud/webfaction/webfaction_app.py
     - cloud/webfaction/webfaction_db.py
     - cloud/webfaction/webfaction_domain.py
@@ -2003,46 +2046,6 @@ community:
     - network/a10/a10_server_axapi3.py
     - network/a10/a10_service_group.py
     - network/a10/a10_virtual_server.py
-    - network/aci/aci_fabric_scheduler.py
-    - network/aci/aci_firmware_group.py
-    - network/aci/aci_firmware_group_node.py
-    - network/aci/aci_firmware_policy.py
-    - network/aci/aci_interface_policy_cdp.py
-    - network/aci/aci_maintenance_group.py
-    - network/aci/aci_maintenance_group_node.py
-    - network/aci/aci_maintenance_policy.py
-    - network/aci/mso_label.py
-    - network/aci/mso_role.py
-    - network/aci/mso_schema.py
-    - network/aci/mso_schema_site.py
-    - network/aci/mso_schema_site_anp.py
-    - network/aci/mso_schema_site_anp_epg.py
-    - network/aci/mso_schema_site_anp_epg_staticleaf.py
-    - network/aci/mso_schema_site_anp_epg_staticport.py
-    - network/aci/mso_schema_site_anp_epg_subnet.py
-    - network/aci/mso_schema_site_bd.py
-    - network/aci/mso_schema_site_bd_l3out.py
-    - network/aci/mso_schema_site_bd_subnet.py
-    - network/aci/mso_schema_site_vrf.py
-    - network/aci/mso_schema_site_vrf_region.py
-    - network/aci/mso_schema_site_vrf_region_cidr.py
-    - network/aci/mso_schema_site_vrf_region_cidr_subnet.py
-    - network/aci/mso_schema_template.py
-    - network/aci/mso_schema_template_anp.py
-    - network/aci/mso_schema_template_anp_epg.py
-    - network/aci/mso_schema_template_anp_epg_contract.py
-    - network/aci/mso_schema_template_anp_epg_subnet.py
-    - network/aci/mso_schema_template_bd.py
-    - network/aci/mso_schema_template_bd_subnet.py
-    - network/aci/mso_schema_template_contract_filter.py
-    - network/aci/mso_schema_template_deploy.py
-    - network/aci/mso_schema_template_externalepg.py
-    - network/aci/mso_schema_template_filter_entry.py
-    - network/aci/mso_schema_template_l3out.py
-    - network/aci/mso_schema_template_vrf.py
-    - network/aci/mso_site.py
-    - network/aci/mso_tenant.py
-    - network/aci/mso_user.py
     - network/aireos/aireos_command.py
     - network/aireos/aireos_config.py
     - network/aos/_aos_asn_pool.py
@@ -2526,7 +2529,6 @@ community:
     - network/illumos/ipadm_prop.py
     - network/ingate/ig_config.py
     - network/ingate/ig_unit_information.py
-    - network/ios/ios_ping.py
     - network/ironware/ironware_command.py
     - network/ironware/ironware_config.py
     - network/ironware/ironware_facts.py

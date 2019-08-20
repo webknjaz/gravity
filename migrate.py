@@ -192,6 +192,10 @@ def rewrite_doc_fragments(plugin_data, collection, spec, args):
             # plugin not in spec, assuming it stays in core and leaving as is
             continue
 
+        if fragment_collection.startswith('_'):
+            # skip rewrite
+            continue
+
         # TODO what if it's in a different namespace (different spec)? do we care?
         new_fragment = '%s.%s.%s' % (args.namespace, fragment_collection, fragment)
         # TODO make sure to replace only in DOCUMENTATION
@@ -253,7 +257,11 @@ def rewrite_imports_in_fst(mod_fst, import_map, collection, spec):
             plugin_collection = get_plugin_collection(plugin_name, plugin_type, spec)
         except LookupError:
             # plugin not in spec, assuming it stays in core and skipping
-            logger.info('Could not find "%s.%s" in spec, assuming it stays in core' % (plugin_type, plugin_name))
+            logger.info('Could not find "%s.%s" in spec, assuming it stays in core' % (plugin_type, plugin_name.replace('/', '.')))
+            continue
+
+        if plugin_collection.startswith('_'):
+            # skip rewrite
             continue
 
         imp_src[:token_length] = exchange  # replace the import
@@ -290,6 +298,10 @@ def assemble_collections(spec, args):
     seen = {}
     migrated_to_collection = defaultdict(set)
     for collection in spec.keys():
+
+        if collection.startswith('_'):
+            # these are placeholder collections
+            continue
 
         collection_dir = os.path.join(collections_base_dir, 'ansible_collections', args.namespace, collection)
 
