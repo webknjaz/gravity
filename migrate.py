@@ -188,6 +188,8 @@ def rewrite_doc_fragments(plugin_data, collection, spec, args):
                     docs = node.value.s.strip('\n')
                     docs_parsed = yaml.safe_load(docs)
                     self.fragments = docs_parsed.get('extends_documentation_fragment', [])
+                    if not isinstance(self.fragments, list):
+                        self.fragments = [self.fragments]
 
     # TODO: use ansible-doc --json instead? plugin loader/docs directly?
 
