@@ -41,6 +41,9 @@ _core:
     - six/moves/urllib/request.py
     - urls.py
 aci:
+    doc_fragments:
+    - aci.py
+    - mso.py
     modules:
     - network/aci/aci_aaa_user.py
     - network/aci/aci_aaa_user_certificate.py
@@ -140,6 +143,8 @@ aci:
     - network/aci/aci.py
     - network/aci/mso.py
 bigip:
+    doc_fragments:
+    - f5.py
     modules:
     - network/f5/_bigip_device_facts.py
     - network/f5/bigip_apm_policy_fetch.py
@@ -356,6 +361,8 @@ frr:
     - network/frr/providers/module.py
     - network/frr/providers/providers.py
 ios:
+    doc_fragments:
+    - ios.py
     modules:
     - network/ios/_ios_interface.py
     - network/ios/_ios_l2_interface.py
@@ -382,22 +389,31 @@ ios:
     - network/ios/ios_vlans.py
     - network/ios/ios_vrf.py
     module_utils:
-    - network/ios/ios.py
-    - network/ios/utils/utils.py
     - network/ios/argspec/interfaces/interfaces.py
     - network/ios/argspec/facts/facts.py
+    - network/ios/argspec/vlans/vlans.py
+    - network/ios/config/interfaces/interfaces.py
+    - network/ios/config/vlans/vlans.py
+    - network/ios/facts/facts.py
+    - network/ios/facts/interfaces/interfaces.py
+    - network/ios/facts/l2_interfaces/l2_interfaces.py
+    - network/ios/facts/lacp/lacp.py
+    - network/ios/facts/lacp_interfaces/lacp_interfaces.py
+    - network/ios/facts/lag_interfaces/lag_interfaces.py
+    - network/ios/facts/legacy/base.py
+    - network/ios/facts/vlans/vlans.py
+    - network/ios/ios.py
     - network/ios/providers/cli/config/base.py
     - network/ios/providers/cli/config/bgp/neighbors.py
     - network/ios/providers/cli/config/bgp/address_family.py
     - network/ios/providers/cli/config/bgp/process.py
     - network/ios/providers/module.py
     - network/ios/providers/providers.py
-    - network/ios/config/interfaces/interfaces.py
-    - network/ios/facts/facts.py
-    - network/ios/facts/interfaces/interfaces.py
-    - network/ios/facts/legacy/base.py
+    - network/ios/utils/utils.py
 #iosxr:
 junos:
+    doc_fragments:
+    - junos.py
     netconf:
     - junos.py
     terminal:
@@ -468,6 +484,8 @@ layer3:
     - network/layer3/net_l3_interface.py
     - network/layer3/net_vrf.py
 nso:
+    doc_fragments:
+    - nso.py
     modules:
     - network/nso/nso_action.py
     - network/nso/nso_config.py
@@ -477,6 +495,8 @@ nso:
     module_utils:
     - network/nso/nso.py
 nxos:
+    doc_fragments:
+    - nxos.py
     modules:
     - network/nxos/_nxos_interface.py
     - network/nxos/_nxos_ip_interface.py
@@ -591,6 +611,8 @@ ovs:
     - network/ovs/openvswitch_db.py
     - network/ovs/openvswitch_port.py
 skydive:
+    doc_fragments:
+    - skydive.py
     modules:
     - network/skydive/skydive_capture.py
     - network/skydive/skydive_edge.py
@@ -600,6 +622,8 @@ skydive:
     lookups:
     - skydive.py
 sros:
+    doc_fragments:
+    - sros.py
     modules:
     - network/sros/sros_command.py
     - network/sros/sros_config.py
@@ -607,11 +631,14 @@ sros:
     module_utils:
     - network/sros/sros.py
 vyos:
+    doc_fragments:
+    - vyos.py
     modules:
     - network/vyos/_vyos_interface.py
     - network/vyos/_vyos_l3_interface.py
     - network/vyos/_vyos_linkagg.py
     - network/vyos/_vyos_lldp.py
+    - network/vyos/_vyos_lldp_interface.py
     - network/vyos/vyos_banner.py
     - network/vyos/vyos_command.py
     - network/vyos/vyos_config.py
@@ -620,7 +647,7 @@ vyos:
     - network/vyos/vyos_l3_interfaces.py
     - network/vyos/vyos_lag_interfaces.py
     - network/vyos/vyos_lldp_global.py
-    - network/vyos/vyos_lldp_interface.py
+    - network/vyos/vyos_lldp_interfaces.py
     - network/vyos/vyos_logging.py
     - network/vyos/vyos_ping.py
     - network/vyos/vyos_static_route.py
@@ -628,23 +655,26 @@ vyos:
     - network/vyos/vyos_user.py
     - network/vyos/vyos_vlan.py
     module_utils:
-    - network/vyos/vyos.py
-    - network/vyos/utils/utils.py
-    - network/vyos/argspec/interfaces/interfaces.py
-    - network/vyos/argspec/lag_interfaces/lag_interfaces.py
-    - network/vyos/argspec/l3_interfaces/l3_interfaces.py
     - network/vyos/argspec/facts/facts.py
-    - network/vyos/config/interfaces/interfaces.py
+    - network/vyos/argspec/l3_interfaces/l3_interfaces.py
+    - network/vyos/argspec/lag_interfaces/lag_interfaces.py
+    - network/vyos/argspec/lldp_global/lldp_global.py
+    - network/vyos/argspec/interfaces/interfaces.py
     - network/vyos/config/lag_interfaces/lag_interfaces.py
     - network/vyos/config/l3_interfaces/l3_interfaces.py
+    - network/vyos/config/interfaces/interfaces.py
     - network/vyos/facts/facts.py
     - network/vyos/facts/interfaces/interfaces.py
-    - network/vyos/facts/lag_interfaces/lag_interfaces.py
     - network/vyos/facts/l3_interfaces/l3_interfaces.py
+    - network/vyos/facts/lag_interfaces/lag_interfaces.py
     - network/vyos/facts/legacy/base.py
+    - network/vyos/utils/utils.py
+    - network/vyos/vyos.py
 #nios:
 #cyberark:
 alicloud:
+    doc_fragments:
+    - alicloud.py
     modules:
     - cloud/alicloud/_ali_instance_facts.py
     - cloud/alicloud/ali_instance.py
@@ -653,7 +683,9 @@ alicloud:
     - alicloud_ecs.py
 amazon:
     doc_fragments:
-    - awx.py
+    - aws.py
+    - aws_credentials.py
+    - aws_region.py
     - ec2.py
     module_utils:
     - ec2.py
@@ -3112,6 +3144,8 @@ community:
 network:
     become:
     - enable.py
+    doc_fragments:
+    - network_agnostic.py
     httpapi:
     - checkpoint.py
     - exos.py
@@ -3144,6 +3178,13 @@ network:
     module_utils:
     - compat/ipaddress.py
     - compat/paramiko.py
+    - network/common/cfg/base.py
+    - network/common/config.py
+    - network/common/facts/facts.py
+    - network/common/netconf.py
+    - network/common/network.py
+    - network/common/parsing.py
+    - network/common/utils.py
     netconf:
     - ce.py
     - default.py
