@@ -7,7 +7,13 @@ _core:
     - reboot.py
     - template.py
     callback:
-    - default
+    - default.py
+    doc_fragments:
+    - default_callback.py
+    - files.py
+    - shell_common.py
+    - url.py
+    - validate.py
     module_utils:
     - _text.py
     - ansible_release.py
@@ -40,6 +46,8 @@ _core:
     - six/moves/urllib/parse.py
     - six/moves/urllib/request.py
     - urls.py
+    shell:
+    - sh.py
 aci:
     doc_fragments:
     - aci.py
@@ -658,18 +666,25 @@ vyos:
     - network/vyos/argspec/facts/facts.py
     - network/vyos/argspec/l3_interfaces/l3_interfaces.py
     - network/vyos/argspec/lag_interfaces/lag_interfaces.py
+    - network/vyos/argspec/lldp_interfaces/lldp_interfaces.py
     - network/vyos/argspec/lldp_global/lldp_global.py
     - network/vyos/argspec/interfaces/interfaces.py
     - network/vyos/config/lag_interfaces/lag_interfaces.py
     - network/vyos/config/l3_interfaces/l3_interfaces.py
+    - network/vyos/config/lldp_global/lldp_global.py
+    - network/vyos/config/lldp_interfaces/lldp_interfaces.py
     - network/vyos/config/interfaces/interfaces.py
     - network/vyos/facts/facts.py
     - network/vyos/facts/interfaces/interfaces.py
+    - network/vyos/facts/lldp_global/lldp_global.py
+    - network/vyos/facts/lldp_interfaces/lldp_interfaces.py
     - network/vyos/facts/l3_interfaces/l3_interfaces.py
     - network/vyos/facts/lag_interfaces/lag_interfaces.py
     - network/vyos/facts/legacy/base.py
     - network/vyos/utils/utils.py
     - network/vyos/vyos.py
+    terminal:
+    - vyos.py
 #nios:
 #cyberark:
 alicloud:
@@ -1279,6 +1294,7 @@ google:
 vmware:
     doc_fragments:
     - vmware.py
+    - vmware_rest_client.py
     modules:
     - cloud/vmware/_vsphere_guest.py
     - cloud/vmware/vca_fw.py
@@ -1465,6 +1481,89 @@ community:
     - pfexec.py
     - pmrun.py
     - sesu.py
+    doc_fragments:
+    - acme.py
+    - aireos.py
+    - aruba.py
+    - asa.py
+    - auth_basic.py
+    - avi.py
+    - ce.py
+    - checkpoint_commands.py
+    - checkpoint_objects.py
+    - cloudscale.py
+    - cnos.py
+    - decrypt.py
+    - default_callback.py
+    - dellos10.py
+    - dellos6.py
+    - dellos9.py
+    - digital_ocean.py
+    - dimensiondata.py
+    - dimensiondata_wait.py
+    - docker.py
+    - emc.py
+    - enos.py
+    - exoscale.py
+    - files.py
+    - fortios.py
+    - hcloud.py
+    - hetzner.py
+    - hpe3par.py
+    - hwc.py
+    - ibm_storage.py
+    - infinibox.py
+    - influxdb.py
+    - ingate.py
+    - intersight.py
+    - ipa.documentation.py
+    - ironware.py
+    - k8s_auth_options.py
+    - k8s_name_options.py
+    - k8s_resource_options.py
+    - k8s_scale_options.py
+    - k8s_state_options.py
+    - keycloak.py
+    - kubevirt_common_options.py
+    - kubevirt_vm_options.py
+    - ldap.py
+    - lxca_common.py
+    - manageiq.py
+    - meraki.py
+    - mysql.py
+    - netapp.py
+    - netscaler.py
+    - nios.py
+    - ovirt.py
+    - ovirt_facts.py
+    - oneview.py
+    - online.py
+    - onyx.py
+    - opennebula.py
+    - openstack.py
+    - oracle.py
+    - oracle_creatable_resource.py
+    - oracle_tags.py
+    - oracle_wait_options.py
+    - ovirt.py
+    - ovirt_facts.py
+    - panos.py
+    - postgres.py
+    - proxysql.py
+    - purestorage.py
+    - rabbitmq.py
+    - rackspace.py
+    - scaleway.py
+    - service_now.py
+    - template_common.py
+    - tower.py
+    - ucs.py
+    - utm.py
+    - vca.py
+    - vca.py
+    - vexata.py
+    - xenserver.py
+    - zabbix.py
     callback:
     - actionable.py
     - aws_resource_actions.py
@@ -1500,6 +1599,8 @@ community:
     - unixy.py
     - yaml.py
     doc_fragments:
+    - a10.py
+    - acme.py
     - cloudstack.py
     - digital_ocean.py
     - docker.py
@@ -3087,6 +3188,7 @@ community:
     - utilities/helper/_accelerate.py
     - utilities/logic/set_stats.py
     - web_infrastructure/_jenkins_job_facts.py
+    - web_infrastructure/_nginx_status_facts.py
     - web_infrastructure/apache2_mod_proxy.py
     - web_infrastructure/apache2_module.py
     - web_infrastructure/deploy_helper.py
@@ -3100,7 +3202,7 @@ community:
     - web_infrastructure/jenkins_plugin.py
     - web_infrastructure/jenkins_script.py
     - web_infrastructure/jira.py
-    - web_infrastructure/nginx_status_facts.py
+    - web_infrastructure/nginx_status_info.py
     - web_infrastructure/rundeck_acl_policy.py
     - web_infrastructure/rundeck_project.py
     - web_infrastructure/sophos_utm/utm_aaa_group.py
@@ -3129,6 +3231,7 @@ community:
     - docker/common.py
     - docker/swarm.py
     - exoscale.py
+    - linode.py
     - lxd.py
     - mysql.py
     - oneandone.py
@@ -3148,8 +3251,9 @@ community:
     - remote_management/intersight.py
     - remote_management/lxca/common.py
     - remote_management/ucs.py
-    - source_control/bitbucket.py
     - scaleway.py
+    - service_now.py
+    - source_control/bitbucket.py
     - storage/emc/emc_vnx.py
     - storage/hpe3par/hpe3par.py
     - univention_umc.py
@@ -3161,6 +3265,9 @@ network:
     become:
     - enable.py
     doc_fragments:
+    - aireos.py
+    - aruba.py
+    - asa.py
     - network_agnostic.py
     httpapi:
     - checkpoint.py
@@ -3233,7 +3340,6 @@ network:
     - slxos.py
     - sros.py
     - voss.py
-    - vyos.py
 unix:
     action:
     - assemble.py
@@ -3307,12 +3413,15 @@ windows:
     - win_copy.py
     - win_reboot.py
     - win_template.py
-    - win_updates.py  # Skip due to baron choking on the code
+    #- win_updates.py  # Skip due to baron choking on the code
     become:
     - runas.py
     connection:
     - psrp.py
     - winrm.py
+    doc_fragments:
+    - shell_windows.py
+    - url_windows.py
     modules:
     - windows/_win_msi.py
     - windows/async_status.ps1
@@ -3546,6 +3655,8 @@ windows:
     - cmd.py
     - powershell.py
 tower:
+    doc_fragments:
+    - tower.py
     modules:
     - web_infrastructure/ansible_tower/tower_credential.py
     - web_infrastructure/ansible_tower/tower_credential_type.py
