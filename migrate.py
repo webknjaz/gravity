@@ -170,7 +170,12 @@ def get_plugin_collection(plugin_name, plugin_type, spec):
             if plugin_name + '.py' in plugins:
                 return collection
 
-    raise LookupError('Could not find pluging "%s" of type "%s" in any collection in the spec' % (plugin_name.replace('/', '.'), plugin_type))
+    # keep info
+    plugin_name = plugin_name.replace('/', '.')
+    logger.debug('Assuming "%s.%s " stays in core' % (plugin_type, plugin_name))
+    add_core(plugin_type, plugin_name.replace('/', '.'))
+
+    raise LookupError('Could not find pluging "%s" of type "%s" in any collection in the spec' % (plugin_name, plugin_type))
 
 
 def rewrite_doc_fragments(plugin_data, collection, spec, args):
@@ -275,8 +280,6 @@ def rewrite_imports_in_fst(mod_fst, import_map, collection, spec):
             plugin_collection = get_plugin_collection(plugin_name, plugin_type, spec)
         except LookupError as e:
             # plugin not in spec, assuming it stays in core and skipping
-            logger.debug('%s. Assuming it stays in core' % str(e))
-            add_core(plugin_type, plugin_name.replace('/', '.'))
             continue
 
         if plugin_collection.startswith('_'):
