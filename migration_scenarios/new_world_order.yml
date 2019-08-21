@@ -1,8 +1,28 @@
 _core:
+    action:
+    - normal.py
+    - copy.py
+    - package.py
+    - service.py
+    - reboot.py
+    - template.py
+    callback:
+    - default
     module_utils:
     - _text.py
+    - api.py
     - basic.py
+    - connection.py
+    - common.py
+    - common/collections.py
+    - common/dict_transformations.py
+    - common/removed.py
+    - parsing/convert_bool.py
     - six.py
+    - six/moves.py
+    - six/moves/urllib.py
+    - six/moves/urllib/parse.py
+    - six/moves/urllib/error.py
     - urls.py
 aci:
     modules:
@@ -267,6 +287,10 @@ checkpoint:
     - network/checkpoint/checkpoint.py
 eos:
     modules:
+    - network/eos/_eos_interface.py
+    - network/eos/_eos_l2_interface.py
+    - network/eos/_eos_linkagg.py
+    - network/eos/_eos_vlan.py
     - network/eos/eos_banner.py
     - network/eos/eos_bgp.py
     - network/eos/eos_command.py
@@ -274,15 +298,15 @@ eos:
     - network/eos/eos_eapi.py
     - network/eos/eos_facts.py
     - network/eos/eos_interfaces.py
-    - network/eos/eos_l2_interface.py
+    - network/eos/eos_l2_interfaces.py
     - network/eos/eos_l3_interface.py
-    - network/eos/eos_linkagg.py
+    - network/eos/eos_lag_interfaces.py
     - network/eos/eos_lldp.py
     - network/eos/eos_logging.py
     - network/eos/eos_static_route.py
     - network/eos/eos_system.py
     - network/eos/eos_user.py
-    - network/eos/eos_vlan.py
+    - network/eos/eos_vlans.py
     - network/eos/eos_vrf.py
     httpapi:
     - eos.py
@@ -315,14 +339,20 @@ frr:
     - network/frr/providers/providers.py
 ios:
     modules:
+    - network/ios/_ios_interface.py
+    - network/ios/_ios_l2_interface.py
+    - network/ios/_ios_vlan.py
     - network/ios/ios_banner.py
     - network/ios/ios_bgp.py
     - network/ios/ios_command.py
     - network/ios/ios_config.py
     - network/ios/ios_facts.py
     - network/ios/ios_interfaces.py
-    - network/ios/ios_l2_interface.py
+    - network/ios/ios_l2_interfaces.py
     - network/ios/ios_l3_interface.py
+    - network/ios/ios_lacp.py
+    - network/ios/ios_lacp_interfaces.py
+    - network/ios/ios_lag_interfaces.py
     - network/ios/ios_linkagg.py
     - network/ios/ios_lldp.py
     - network/ios/ios_logging.py
@@ -331,7 +361,7 @@ ios:
     - network/ios/ios_static_route.py
     - network/ios/ios_system.py
     - network/ios/ios_user.py
-    - network/ios/ios_vlan.py
+    - network/ios/ios_vlans.py
     - network/ios/ios_vrf.py
     module_utils:
     - network/ios/ios.py
@@ -563,6 +593,7 @@ vyos:
     - network/vyos/_vyos_interface.py
     - network/vyos/_vyos_l3_interface.py
     - network/vyos/_vyos_linkagg.py
+    - network/vyos/_vyos_lldp.py
     - network/vyos/vyos_banner.py
     - network/vyos/vyos_command.py
     - network/vyos/vyos_config.py
@@ -570,7 +601,7 @@ vyos:
     - network/vyos/vyos_interfaces.py
     - network/vyos/vyos_l3_interfaces.py
     - network/vyos/vyos_lag_interfaces.py
-    - network/vyos/vyos_lldp.py
+    - network/vyos/vyos_lldp_global.py
     - network/vyos/vyos_lldp_interface.py
     - network/vyos/vyos_logging.py
     - network/vyos/vyos_ping.py
@@ -1363,7 +1394,6 @@ vultr:
 #openshift:
 community:
     action:
-    - patch.py
     - telnet.py
     become:
     - dzdo.py
@@ -1420,7 +1450,6 @@ community:
     - libvirt_lxc.py
     lookup:
     - _openshift.py
-    - _redis_kv.py
     - avi.py
     - chef_databag.py
     - conjur_variable.py
@@ -1431,8 +1460,6 @@ community:
     - csvfile.py
     - cyberarkpassword.py
     - dict.py
-    - dig.py
-    - dnstxt.py
     - etcd.py
     - filetree.py
     - grafana_dashboard.py
@@ -1440,7 +1467,6 @@ community:
     - hiera.py
     - ini.py
     - k8s.py
-    - keyring.py
     - laps_password.py
     - lastpass.py
     - manifold.py
@@ -1455,11 +1481,9 @@ community:
     - rabbitmq.py
     - random_choice.py
     - redis.py
-    - shelvefile.py
     filter:
     - json_query.py
     - k8s.py
-    - network.py
     modules:
     - cloud/atomic/atomic_container.py
     - cloud/atomic/atomic_host.py
@@ -1934,11 +1958,8 @@ community:
     - files/archive.py
     - files/ini_file.py
     - files/iso_extract.py
-    - files/patch.py
     - files/read_csv.py
     - files/replace.py
-    - files/tempfile.py
-    - files/xattr.py
     - files/xml.py
     - identity/ipa/ipa_config.py
     - identity/ipa/ipa_dnsrecord.py
@@ -2038,7 +2059,6 @@ community:
     - net_tools/netbox/netbox_prefix.py
     - net_tools/netbox/netbox_site.py
     - net_tools/netcup_dns.py
-    - net_tools/nmcli.py
     - net_tools/nsupdate.py
     - net_tools/omapi_host.py
     - net_tools/snmp_facts.py
@@ -2688,11 +2708,9 @@ community:
     - network/slxos/slxos_linkagg.py
     - network/slxos/slxos_lldp.py
     - network/slxos/slxos_vlan.py
-    - network/system/net_ping.py
     - network/voss/voss_command.py
     - network/voss/voss_config.py
     - network/voss/voss_facts.py
-    - network/vyos/vyos_ping.py
     - notification/_osx_say.py
     - notification/bearychat.py
     - notification/campfire.py
@@ -2786,8 +2804,9 @@ community:
     - remote_management/dellemc/ome_device_info.py
     - remote_management/foreman/_foreman.py
     - remote_management/foreman/_katello.py
+    - remote_management/hpilo/_hpilo_facts.py
     - remote_management/hpilo/hpilo_boot.py
-    - remote_management/hpilo/hpilo_facts.py
+    - remote_management/hpilo/hpilo_info.py
     - remote_management/hpilo/hponcfg.py
     - remote_management/imc/imc_rest.py
     - remote_management/intersight/_intersight_facts.py
@@ -2856,7 +2875,8 @@ community:
     - source_control/gitlab_user.py
     - source_control/hg.py
     - storage/emc/emc_vnx_sg_member.py
-    - storage/glusterfs/gluster_heal_facts.py
+    - storage/glusterfs/_gluster_heal_facts.py
+    - storage/glusterfs/gluster_heal_info.py
     - storage/glusterfs/gluster_peer.py
     - storage/glusterfs/gluster_volume.py
     - storage/hpe3par/ss_3par_cpg.py
@@ -2926,12 +2946,14 @@ community:
     - storage/netapp/netapp_e_syslog.py
     - storage/netapp/netapp_e_volume.py
     - storage/netapp/netapp_e_volume_copy.py
+    - storage/purestorage/_purefa_facts.py
+    - storage/purestorage/_purefb_facts.py
     - storage/purestorage/purefa_arrayname.py
     - storage/purestorage/purefa_banner.py
     - storage/purestorage/purefa_dns.py
     - storage/purestorage/purefa_ds.py
     - storage/purestorage/purefa_dsrole.py
-    - storage/purestorage/purefa_facts.py
+    - storage/purestorage/purefa_info.py
     - storage/purestorage/purefa_hg.py
     - storage/purestorage/purefa_host.py
     - storage/purestorage/purefa_ntp.py
@@ -2947,7 +2969,7 @@ community:
     - storage/purestorage/purefb_bucket.py
     - storage/purestorage/purefb_ds.py
     - storage/purestorage/purefb_dsrole.py
-    - storage/purestorage/purefb_facts.py
+    - storage/purestorage/purefb_info.py
     - storage/purestorage/purefb_fs.py
     - storage/purestorage/purefb_network.py
     - storage/purestorage/purefb_s3acc.py
@@ -2961,60 +2983,33 @@ community:
     - storage/zfs/zfs_facts.py
     - storage/zfs/zpool_facts.py
     - system/_python_requirements_facts.py
-    - system/aix_devices.py
-    - system/aix_filesystem.py
-    - system/aix_inittab.py
-    - system/aix_lvg.py
-    - system/aix_lvol.py
-    - system/alternatives.py
     - system/awall.py
     - system/beadm.py
-    - system/capabilities.py
-    - system/cron.py
-    - system/cronvar.py
-    - system/crypttab.py
     - system/dconf.py
     - system/facter.py
-    - system/filesystem.py
-    - system/firewalld.py
-    - system/gconftool2.py
     - system/hostname.py
     - system/interfaces_file.py
     - system/java_cert.py
     - system/java_keystore.py
     - system/kernel_blacklist.py
-    - system/known_hosts.py
-    - system/locale_gen.py
-    - system/lvg.py
-    - system/lvol.py
     - system/make.py
     - system/mksysb.py
-    - system/modprobe.py
     - system/nosh.py
     - system/ohai.py
     - system/open_iscsi.py
-    - system/openwrt_init.py
-    - system/osx_defaults.py
-    - system/pam_limits.py
     - system/pamd.py
     - system/parted.py
     - system/pids.py
     - system/puppet.py
     - system/python_requirements_info.py
-    - system/runit.py
     - system/sefcontext.py
     - system/selinux_permissive.py
     - system/selogin.py
-    - system/seport.py
     - system/service_facts.py
-    - system/solaris_zone.py
-    - system/svc.py
     - system/syspatch.py
     - system/timezone.py
-    - system/ufw.py
     - system/vdo.py
     - system/xfconf.py
-    - system/xfs_quota.py
     - utilities/helper/_accelerate.py
     - utilities/logic/set_stats.py
     - web_infrastructure/_jenkins_job_facts.py
@@ -3049,87 +3044,12 @@ community:
     - web_infrastructure/sophos_utm/utm_proxy_location_info.py
     - web_infrastructure/supervisorctl.py
     - web_infrastructure/taiga_issue.py
-    - windows/_win_msi.py
-    - windows/win_audit_policy_system.py
-    - windows/win_audit_rule.py
-    - windows/win_certificate_store.py
-    - windows/win_chocolatey.py
-    - windows/win_chocolatey_config.py
-    - windows/win_chocolatey_facts.py
-    - windows/win_chocolatey_feature.py
-    - windows/win_chocolatey_source.py
-    - windows/win_credential.py
-    - windows/win_defrag.py
-    - windows/win_disk_facts.py
-    - windows/win_dns_record.py
-    - windows/win_domain_computer.py
-    - windows/win_domain_group.py
-    - windows/win_domain_group_membership.py
-    - windows/win_domain_user.py
-    - windows/win_dotnet_ngen.py
-    - windows/win_dsc.py
-    - windows/win_environment.py
-    - windows/win_eventlog.py
-    - windows/win_eventlog_entry.py
-    - windows/win_feature.py
-    - windows/win_file_version.py
-    - windows/win_find.py
-    - windows/win_firewall.py
-    - windows/win_firewall_rule.py
-    - windows/win_format.py
-    - windows/win_group_membership.py
-    - windows/win_hostname.py
-    - windows/win_hosts.py
-    - windows/win_hotfix.py
-    - windows/win_http_proxy.py
-    - windows/win_iis_virtualdirectory.py
-    - windows/win_iis_webapplication.py
-    - windows/win_iis_webapppool.py
-    - windows/win_iis_webbinding.py
-    - windows/win_iis_website.py
-    - windows/win_inet_proxy.py
-    - windows/win_lineinfile.py
-    - windows/win_mapped_drive.py
-    - windows/win_msg.py
-    - windows/win_netbios.py
-    - windows/win_nssm.py
-    - windows/win_optional_feature.py
-    - windows/win_pagefile.py
-    - windows/win_partition.py
-    - windows/win_pester.py
-    - windows/win_power_plan.py
-    - windows/win_product_facts.py
-    - windows/win_psexec.py
-    - windows/win_psmodule.py
-    - windows/win_psrepository.py
-    - windows/win_rabbitmq_plugin.py
-    - windows/win_rds_cap.py
-    - windows/win_rds_rap.py
-    - windows/win_rds_settings.py
-    - windows/win_reg_stat.py
-    - windows/win_region.py
-    - windows/win_regmerge.py
-    - windows/win_robocopy.py
-    - windows/win_route.py
-    - windows/win_say.py
-    - windows/win_scheduled_task.py
-    - windows/win_scheduled_task_stat.py
-    - windows/win_security_policy.py
-    - windows/win_shortcut.py
-    - windows/win_snmp.py
-    - windows/win_tempfile.py
-    - windows/win_timezone.py
-    - windows/win_toast.py
-    - windows/win_unzip.py
-    - windows/win_uri.py
-    - windows/win_user_profile.py
-    - windows/win_user_right.py
-    - windows/win_wait_for.py
-    - windows/win_wait_for_process.py
-    - windows/win_wakeonlan.py
-    - windows/win_webpicmd.py
-    - windows/win_whoami.py
-    - windows/win_xml.py
+    module_utils:
+    - digital_ocean.py
+    - mysql.py
+    - postgres.py
+    - rabbitmq.py
+    - xenserver.py
 network:
     become:
     - enable.py
@@ -3199,7 +3119,7 @@ unix:
     action:
     - assemble.py
     - patch.py
-    - syncrhonize.py
+    - synchronize.py
     become:
     - doas.py
     connection:
@@ -3218,14 +3138,12 @@ unix:
     - files/lineinfile.py
     - files/unarchive.py
     - files/xattr.py
-    - files/syncrhonize.py
+    - files/synchronize.py
     - files/tempfile.py
     - files/patch.py
+    - net_tools/nmcli.py
     - net_tools/basics/get_url.py
-    - net_tools/basics/nmcli.py
     - net_tools/basics/uri.py
-    - system/modprobe.py
-    - system/alternatives.py
     - system/alternatives.py
     - system/aix_inittab.py
     - system/aix_devices.py
@@ -3237,11 +3155,10 @@ unix:
     - system/capabilities.py
     - system/cron.py
     - system/cronvar.py
-    - system/dconf.py
     - system/debconf.py
-    - system/facter.py
     - system/filesystem.py
     - system/firewalld.py
+    - system/gconftool2.py
     - system/iptables.py
     - system/known_hosts.py
     - system/locale_gen.py
@@ -3269,7 +3186,7 @@ windows:
     - win_copy.py
     - win_reboot.py
     - win_template.py
-    - win_updates.py
+    #- win_updates.py  # Skip due to baron choking on the code
     become:
     - runas.py
     connection:
