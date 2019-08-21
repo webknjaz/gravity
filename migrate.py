@@ -278,13 +278,13 @@ def rewrite_imports_in_fst(mod_fst, import_map, collection, spec):
             plugin_name = [imp_src[idx].value for idx in range(token_length, len(imp_src))]
             plugin_name = '/'.join(plugin_name)
         elif imp_src[1].value == 'plugins':
-            plugin_type = imp_src[2].value
             try:
+                plugin_type = imp_src[2].value
                 plugin_name = imp_src[3].value
             except IndexError:
                 # FIXME logging an error to investigate for now
                 # one example I found is: from ansible.plugins.cache import CachePluginAdjudicator as CacheObject
-                logger.error('Could not get plugin name from ' + str(imp) + '. Is this expected?')
+                logger.error('Could not get plugin type or name from ' + str(imp) + '. Is this expected?')
                 continue
         else:
             raise Exception('BUG: Could not process import: ' + str(imp))

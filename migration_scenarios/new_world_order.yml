@@ -1277,6 +1277,8 @@ google:
     - gcp.py
     - gcp_utils.py
 vmware:
+    doc_fragments:
+    - vmware.py
     modules:
     - cloud/vmware/_vsphere_guest.py
     - cloud/vmware/vca_fw.py
@@ -1406,6 +1408,8 @@ vmware:
     - vmware_rest_client.py
     - vmware_spbm.py
 vultr:
+    doc_fragments:
+    - vultr.py
     modules:
     - cloud/vultr/_vr_account_facts.py
     - cloud/vultr/_vr_dns_domain.py
@@ -1495,6 +1499,10 @@ community:
     - timer.py
     - unixy.py
     - yaml.py
+    doc_fragments:
+    - cloudstack.py
+    - digital_ocean.py
+    - docker.py
     connection:
     - docker.py
     - buildah.py
@@ -1673,21 +1681,29 @@ community:
     - cloud/docker/docker_swarm_service_info.py
     - cloud/docker/docker_volume.py
     - cloud/docker/docker_volume_info.py
-    - cloud/hcloud/hcloud_datacenter_facts.py
-    - cloud/hcloud/hcloud_floating_ip_facts.py
-    - cloud/hcloud/hcloud_image_facts.py
-    - cloud/hcloud/hcloud_location_facts.py
+    - cloud/hcloud/_hcloud_datacenter_facts.py
+    - cloud/hcloud/_hcloud_floating_ip_facts.py
+    - cloud/hcloud/_hcloud_image_facts.py
+    - cloud/hcloud/_hcloud_location_facts.py
+    - cloud/hcloud/_hcloud_server_facts.py
+    - cloud/hcloud/_hcloud_server_type_facts.py
+    - cloud/hcloud/_hcloud_ssh_key_facts.py
+    - cloud/hcloud/_hcloud_volume_facts.py
+    - cloud/hcloud/hcloud_datacenter_info.py
+    - cloud/hcloud/hcloud_floating_ip_info.py
+    - cloud/hcloud/hcloud_image_info.py
+    - cloud/hcloud/hcloud_location_info.py
     - cloud/hcloud/hcloud_network.py
     - cloud/hcloud/hcloud_route.py
     - cloud/hcloud/hcloud_server.py
-    - cloud/hcloud/hcloud_server_facts.py
+    - cloud/hcloud/hcloud_server_info.py
     - cloud/hcloud/hcloud_server_network.py
-    - cloud/hcloud/hcloud_server_type_facts.py
+    - cloud/hcloud/hcloud_server_type_info.py
     - cloud/hcloud/hcloud_ssh_key.py
-    - cloud/hcloud/hcloud_ssh_key_facts.py
+    - cloud/hcloud/hcloud_ssh_key_info.py
     - cloud/hcloud/hcloud_subnetwork.py
     - cloud/hcloud/hcloud_volume.py
-    - cloud/hcloud/hcloud_volume_facts.py
+    - cloud/hcloud/hcloud_volume_info.py
     - cloud/heroku/heroku_collaborator.py
     - cloud/huawei/hwc_network_vpc.py
     - cloud/huawei/hwc_smn_topic.py
