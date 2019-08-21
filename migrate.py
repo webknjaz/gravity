@@ -270,11 +270,24 @@ def rewrite_imports_in_fst(mod_fst, import_map, collection, spec):
 
         if len(imp.find_all('name_as_name', value='g:*Base*')) > 0:
             continue  # Skip imports of Base classes
+        if len(imp.find_all('name_as_name', value='g:*loader*')) > 0:
+            continue  # Skip imports of ansible.plugin.loader.py
 
-        plugin_name = [imp_src[idx].value for idx in range(token_length, len(imp_src))]
-        plugin_name = '/'.join(plugin_name)
-        # assumes ansible.plugin_name (e.g. ansible.module_utils, ansible.plugins) needs FIXME if we use this for units
-        plugin_type = imp_src[1].value
+        if imp_src[1].value == 'module_utils':
+            plugin_type = 'module_utils'
+            plugin_name = [imp_src[idx].value for idx in range(token_length, len(imp_src))]
+            plugin_name = '/'.join(plugin_name)
+        elif imp_src[1].value == 'plugins':
+            plugin_type = imp_src[2].value
+            try:
+                plugin_name = imp_src[3].value
+            except IndexError:
+                # FIXME logging an error to investigate for now
+                # one example I found is: from ansible.plugins.cache import CachePluginAdjudicator as CacheObject
+                logger.error('Could not get plugin name from ' + str(imp) + '. Is this expected?')
+                continue
+        else:
+            raise Exception('BUG: Could not process import: ' + str(imp))
 
         try:
             plugin_collection = get_plugin_collection(plugin_name, plugin_type, spec)
