@@ -226,7 +226,12 @@ def rewrite_imports(mod_src_text, collection, spec, namespace):
         ('ansible', 'plugins'): plugins_path,
     }
 
-    mod_fst = redbaron.RedBaron(mod_src_text)
+    try:
+        mod_fst = redbaron.RedBaron(mod_src_text)
+    except Exception:
+        logger.error('failed parsing on %s' % mod_src_text)
+        raise
+
     deps = rewrite_imports_in_fst(mod_fst, import_map, collection, spec)
     return mod_fst.dumps(), deps
 
@@ -380,6 +385,11 @@ def assemble_collections(spec, args):
 
                 if not os.path.exists(src):
                     raise Exception('Spec specifies "%s" but file "%s" is not found in checkout' % (plugin, src))
+
+                if os.path.splitext(src) not in ('py',):
+                    # its not all python files, copy and go to next
+                    shutil.copyfile(src, dest)
+                    continue
 
                 plugin_data = read_text_from_file(src)
                 plugin_data_new = plugin_data[:]
