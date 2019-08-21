@@ -386,8 +386,9 @@ def assemble_collections(spec, args):
                 if not os.path.exists(src):
                     raise Exception('Spec specifies "%s" but file "%s" is not found in checkout' % (plugin, src))
 
-                if os.path.splitext(src) not in ('py',):
+                if not src.endswith('.py'):
                     # its not all python files, copy and go to next
+                    # TODO: handle powershell import rewrites
                     shutil.copyfile(src, dest)
                     continue
 
