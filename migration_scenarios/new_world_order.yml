@@ -10,19 +10,35 @@ _core:
     - default
     module_utils:
     - _text.py
+    - ansible_release.py
     - api.py
     - basic.py
     - connection.py
     - common.py
+    - common/_collections_compat.py
     - common/collections.py
     - common/dict_transformations.py
+    - common/file.py
+    - common/network.py
+    - common/process.py
     - common/removed.py
+    - common/text/converters.py
+    - common/text/formatters.py
+    - facts.py
+    - facts/packages.py
+    - facts/system/service_mgr.py
+    - facts/utils.py
+    - json_utils.py
     - parsing/convert_bool.py
     - six.py
     - six/moves.py
+    - six/moves/http_client.py
+    - six/moves/http_cookiejar.py
     - six/moves/urllib.py
-    - six/moves/urllib/parse.py
+    - six/moves/urllib_parse.py
     - six/moves/urllib/error.py
+    - six/moves/urllib/parse.py
+    - six/moves/urllib/request.py
     - urls.py
 aci:
     modules:
@@ -634,6 +650,9 @@ alicloud:
     module_utils:
     - alicloud_ecs.py
 amazon:
+    doc_fragments:
+    - awx.py
+    - ec2.py
     module_utils:
     - ec2.py
     - aws/batch.py
@@ -901,6 +920,9 @@ amazon:
     - aws_service_ip_ranges.py
     - aws_ssm.py
 azure:
+    doc_fragments:
+    - azure.py
+    - azure_tags.py
     modules:
     - cloud/azure/_azure.py
     - cloud/azure/_azure_rm_managed_disk.py
@@ -1069,6 +1091,8 @@ azure:
     - azure_rm_common_ext.py
     - azure_rm_common_rest.py
 google:
+    doc_fragments:
+    - gcp.py
     modules:
     - cloud/google/_gcdns_record.py
     - cloud/google/_gcdns_zone.py
@@ -3045,10 +3069,43 @@ community:
     - web_infrastructure/supervisorctl.py
     - web_infrastructure/taiga_issue.py
     module_utils:
+    - acme.py
+    - cloud.py
+    - cloudstack.py
+    - crypto.py
+    - database.py
+    - dimensiondata.py
     - digital_ocean.py
+    - docker/common.py
+    - docker/swarm.py
+    - exoscale.py
+    - lxd.py
     - mysql.py
+    - oneandone.py
+    - online.py
+    - opennebula.py
+    - openstack.py
+    - oracle/oci_utils.py
+    - ovirt.py
+    - podman/common.py
     - postgres.py
+    - pure.py
+    - rax.py
     - rabbitmq.py
+    - redfish_utils.py
+    - remote_management/dellemc/dellemc_idrac.py
+    - remote_management/dellemc/ome.py
+    - remote_management/intersight.py
+    - remote_management/lxca/common.py
+    - remote_management/ucs.py
+    - source_control/bitbucket.py
+    - scaleway.py
+    - storage/emc/emc_vnx.py
+    - storage/hpe3par/hpe3par.py
+    - univention_umc.py
+    - utm_utils.py
+    - vca.py
+    - vexata.py
     - xenserver.py
 network:
     become:
@@ -3082,6 +3139,9 @@ network:
     - network/system/net_ping.py
     - network/system/net_system.py
     - network/system/net_user.py
+    module_utils:
+    - compat/ipaddress.py
+    - compat/paramiko.py
     netconf:
     - ce.py
     - default.py
@@ -3178,6 +3238,8 @@ unix:
     - system/sysctl.py
     - system/ufw.py
     - system/xfs_quota.py
+    module_utils:
+    - firewalld.py
     shell:
     - csh.py
     - fish.py
@@ -3186,7 +3248,7 @@ windows:
     - win_copy.py
     - win_reboot.py
     - win_template.py
-    #- win_updates.py  # Skip due to baron choking on the code
+    - win_updates.py  # Skip due to baron choking on the code
     become:
     - runas.py
     connection:
@@ -3449,3 +3511,5 @@ tower:
     - web_infrastructure/ansible_tower/tower_user.py
     - web_infrastructure/ansible_tower/tower_workflow_launch.py
     - web_infrastructure/ansible_tower/tower_workflow_template.py
+    module_utils:
+    - ansible_tower.py
