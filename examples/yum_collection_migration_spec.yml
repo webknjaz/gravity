@@ -5,6 +5,7 @@ yum_collection:
     - yum.py
   modules:
     - packaging/os/yum.py
+    - web_infrastructure/htpasswd.py
 
   module_utils:
     - network/f5/bigip.py
@@ -40,6 +41,7 @@ yum_collection:
 dep_collection1:
   doc_fragments:
     - default_callback.py
+    - files.py
 
 dep_collection2:
   module_utils:
