@@ -21,7 +21,7 @@ DEVEL_URL = 'https://github.com/ansible/ansible.git'
 DEVEL_BRANCH = 'devel'
 
 VARDIR = os.environ.get('GRAVITY_VAR_DIR', '.cache')
-COLLECTION_NAMESPACE = 'ansible_collection'
+COLLECTION_NAMESPACE = 'test_migrate_ns'
 PLUGIN_EXCEPTION_PATHS = {'modules': 'lib/ansible/modules', 'module_utils': 'lib/ansible/module_utils', 'lookups': 'lib/ansible/plugins/lookup'}
 
 
