@@ -6,6 +6,7 @@ yum_collection:
   modules:
     - packaging/os/yum.py
     - web_infrastructure/htpasswd.py
+    - cloud/vmware/vcenter_license.py
 
   module_utils:
     - network/f5/bigip.py
@@ -42,6 +43,7 @@ dep_collection1:
   doc_fragments:
     - default_callback.py
     - files.py
+    - vmware.py
 
 dep_collection2:
   module_utils:
