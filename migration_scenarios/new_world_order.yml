@@ -8,6 +8,9 @@ _core:
     - template.py
     callback:
     - default.py
+    - minimal.py
+    - oneline.py
+    - tree.py
     doc_fragments:
     - default_callback.py
     - files.py
@@ -3413,7 +3416,7 @@ windows:
     - win_copy.py
     - win_reboot.py
     - win_template.py
-    #- win_updates.py  # Skip due to baron choking on the code
+    - win_updates.py
     become:
     - runas.py
     connection:
