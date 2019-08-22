@@ -319,12 +319,34 @@ def write_text_into_file(path, text):
         return f.write(text)
 
 
+def resolve_spec(spec, checkoutdir):
+
+    # TODO: add negation? entry: x/* \n entry: !x/base.py
+    for coll in spec.keys():
+        for ptype in spec[coll].keys():
+            plugin_base = os.path.join(checkoutdir, PLUGIN_EXCEPTION_PATHS.get(ptype, os.path.join('lib', 'ansible', 'plugins', ptype)))
+            replace_base = '%s/' % plugin_base
+            for entry in spec[coll][ptype]:
+                if r'*' in entry or r'?' in entry:
+                    files = glob.glob(os.path.join(plugin_base, entry))
+                    for fname in files:
+                        if ptype != 'module_utils' and fname.endswith('__init__.py'):
+                            continue
+                        fname = fname.replace(replace_base, '')
+                        spec[coll][ptype].append(fname)
+
+                    # clean out glob entry
+                    spec[coll][ptype].remove(entry)
+
+
 def assemble_collections(spec, args):
     # NOTE releases_dir is already created by checkout_repo(), might want to move all that to something like ensure_dirs() ...
     releases_dir = os.path.join(args.vardir, 'releases')
     checkout_path = os.path.join(releases_dir, f'{DEVEL_BRANCH}.git')
     collections_base_dir = os.path.join(args.vardir, 'collections')
     meta_dir = os.path.join(args.vardir, 'meta')
+
+    resolve_spec(spec, checkout_path)
 
     if args.refresh and os.path.exists(collections_base_dir):
         shutil.rmtree(collections_base_dir)
@@ -647,10 +669,6 @@ def main():
     spec = load_spec_file(args.spec_file)
 
     checkout_repo(args.vardir, args.refresh)
-
-    # TODO: resolve_spec:
-    # add globbing, filter out __init__.py for non module_utils?
-    # add negation? entry: x/* \n entry: !x/base.py
 
     # doeet
     assemble_collections(spec, args)
