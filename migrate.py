@@ -330,7 +330,7 @@ def resolve_spec(spec, checkoutdir):
                 if r'*' in entry or r'?' in entry:
                     files = glob.glob(os.path.join(plugin_base, entry))
                     for fname in files:
-                        if ptype != 'module_utils' and fname.endswith('__init__.py'):
+                        if ptype != 'module_utils' and fname.endswith('__init__.py') or not os.path.isfile(fname):
                             continue
                         fname = fname.replace(replace_base, '')
                         spec[coll][ptype].append(fname)
