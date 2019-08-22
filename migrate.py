@@ -648,6 +648,10 @@ def main():
 
     checkout_repo(args.vardir, args.refresh)
 
+    # TODO: resolve_spec:
+    # add globbing, filter out __init__.py for non module_utils?
+    # add negation? entry: x/* \n entry: !x/base.py
+
     # doeet
     assemble_collections(spec, args)
 
