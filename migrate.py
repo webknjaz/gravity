@@ -1,15 +1,20 @@
 #!/usr/bin/env python
 
+# also dynamically imports ansible in code
+
 import argparse
+import configparser
 import glob
 import os
+import re
 import shutil
 import subprocess
 import sys
 import yaml
 
 from collections import defaultdict
-from collections.abc import Mapping
+from collections.abc import Mapping, Sequence
+from importlib import import_module
 from string import Template
 
 from logzero import logger
@@ -17,6 +22,10 @@ from logzero import logger
 from baron.parser import ParsingError
 import redbaron
 
+
+# https://github.com/ansible/ansible/blob/100fe52860f45238ee8ca9e3019d1129ad043c68/hacking/fix_test_syntax.py#L62
+FILTER_RE = re.compile(r'((.+?)\s*([\w \.\'"]+)(\s*)\|(\s*)(\w+))')
+TEST_RE = re.compile(r'((.+?)\s*([\w \.\'"]+)(\s*)is(\s*)(\w+))')
 
 DEVEL_URL = 'https://github.com/ansible/ansible.git'
 DEVEL_BRANCH = 'devel'
@@ -181,6 +190,15 @@ def get_plugin_collection(plugin_name, plugin_type, spec):
     add_core(plugin_type, plugin_name.replace('/', '.'))
 
     raise LookupError('Could not find "%s" named "%s" in any collection in the spec' % (plugin_type, plugin_name))
+
+
+def get_plugins_from_collection(collection, plugin_type, spec):
+    assert collection in spec
+    return [plugin.rsplit('/')[-1][:-3] for plugin in spec[collection].get(plugin_type, [])]
+
+
+def get_plugin_fqcn(namespace, collection, plugin_name):
+    return '%s.%s.%s' % (namespace, collection, plugin_name)
 
 
 def rewrite_doc_fragments(mod_fst, collection, spec, namespace):
@@ -491,6 +509,9 @@ def assemble_collections(spec, args):
                 # process unit tests TODO: sanity? , integration?
                 #copy_unit_tests(plugin, collection, spec, args)
 
+        # FIXME need to hack PyYAML to preserve formatting (not how much it's possible or how much it is work) or use e.g. ruamel.yaml
+        rewrite_integration_tests(checkout_path, collection_dir, args.namespace, collection, spec)
+
         # write collection metadata
         write_yaml_into_file_as_is(
             os.path.join(collection_dir, 'galaxy.yml'),
@@ -677,6 +698,258 @@ def copy_tests(plugin, coll, spec, args):
                         logger.info('fixing module calls in %s' % yf)
                         with open(yf, 'w') as f:
                             f.write(ydata)
+
+##############################################################################
+# Rewrite integration tests
+##############################################################################
+
+def rewrite_integration_tests(checkout_dir, collection_dir, namespace, collection, spec):
+    # FIXME move to diff file
+    # FIXME look in diff collection too
+    # FIXME rewrite usage of modules in library/
+    # FIXME deps
+    # FIXME module_defaults groups
+    # FIXME discovery
+    if collection != 'yum_collection':
+        return
+    test_dirs = [
+        'test/integration/targets/yum',
+    ]
+
+    for test_dir in test_dirs:
+        for dirpath, dirnames, filenames in os.walk(os.path.join(checkout_dir, test_dir)):
+            for filename in filenames:
+                full_path = os.path.join(dirpath, filename)
+                logger.debug(full_path)
+
+                rel_dir = os.path.relpath(dirpath, os.path.join(checkout_dir, test_dir))
+                dest_dir = os.path.join(collection_dir, test_dir, rel_dir)
+                if not os.path.exists(dest_dir):
+                    os.makedirs(dest_dir)
+                dest = os.path.join(dest_dir, filename)
+
+                dummy, ext = os.path.splitext(filename)
+                if ext in ('.yml', '.yaml'):
+                    rewrite_yaml(full_path, dest, namespace, collection, spec)
+                elif ext in ('.sh',):
+                    rewrite_sh(full_path, dest, namespace, collection, spec)
+                elif ext in ('.cfg',):
+                    rewrite_ini(full_path, dest, namespace, collection, spec)
+                else:
+                    shutil.copy2(full_path, dest)
+
+
+def rewrite_sh(full_path, dest, namespace, collection, spec):
+    sh_key_map = {
+        'ANSIBLE_CACHE_PLUGIN': 'cache',
+        'ANSIBLE_CALLBACK_WHITELIST': 'callback',
+        'ANSIBLE_INVENTORY_CACHE_PLUGIN': 'cache',
+        'ANSIBLE_STDOUT_CALLBACK': 'callback',
+        'ANSIBLE_STRATEGY': 'strategy',
+        '--become-method': 'become',
+        '-c': 'connection',
+        '--connection': 'connection',
+    }
+
+    contents = read_text_from_file(full_path)
+    for key, plugin_type in sh_key_map.items():
+        if not contents.find(key):
+            continue
+        plugins = get_plugins_from_collection(collection, plugin_type, spec)
+        for plugin_name in plugins:
+            if not contents.find(plugin_name):
+                continue
+            # FIXME list
+            new_plugin_name = get_plugin_fqcn(namespace, collection, plugin_name)
+            contents = contents.replace(key + '=' + plugin_name, key + '=' + new_plugin_name)
+            contents = contents.replace(key + ' ' + plugin_name, key + ' ' + new_plugin_name)
+
+    write_text_into_file(dest, contents)
+    shutil.copystat(full_path, dest)
+
+
+def rewrite_ini(src, dest, namespace, collection, spec):
+    ini_key_map = {
+        'defaults': {
+            'callback_whitelist': 'callback',
+            'fact_caching': 'cache',
+            'strategy': 'strategy',
+            'stdout_callback': 'callback',
+        },
+        'inventory': {
+            'cache_plugin': 'cache',
+            'enable_plugins': 'inventory',
+        }
+    }
+
+    config = configparser.ConfigParser()
+    config.read(src)
+    for section in config.sections():
+        try:
+            rewrite_ini_section(config, ini_key_map, section, namespace, collection, spec)
+        except KeyError:
+            continue
+
+    with open(dest, 'w') as cf:
+        config.write(cf)
+
+
+def rewrite_ini_section(config, key_map, section, namespace, collection, spec):
+    for keyword, plugin_type in key_map[section].items():
+        try:
+            # FIXME diff input format than csv?
+            plugin_names = config.get(section, keyword).split(',')
+        except configparser.NoOptionError:
+            continue
+
+        new_plugin_names = []
+        for plugin_name in plugin_names:
+            try:
+                if get_plugin_collection(plugin_name, plugin_type, spec) == collection:
+                    new_plugin_names.append(get_plugin_fqcn(namespace, collection, plugin_name))
+            except LookupError:
+                new_plugin_names.append(plugin_name)
+
+        config.set(section, keyword, ','.join(new_plugin_names))
+
+
+def rewrite_yaml(src, dest, namespace, collection, spec):
+    contents = read_yaml_file(src)
+    _rewrite_yaml(contents, namespace, collection, spec)
+    write_yaml_into_file_as_is(dest, contents)
+
+
+def _rewrite_yaml(contents, namespace, collection, spec):
+    if isinstance(contents, list):
+        for el in contents:
+            _rewrite_yaml(el, namespace, collection, spec)
+    elif isinstance(contents, Mapping):
+        _rewrite_yaml_mapping(contents, namespace, collection, spec)
+
+
+KEYWORD_TO_PLUGIN_MAP = {
+    'ansible_become_method': 'become',
+    'ansible_connection': 'connection',
+    'ansible_shell_type': 'shell',
+    'become_method': 'become',
+    'cache_plugin': 'cache',
+    'connection': 'connection',
+    'plugin': 'inventory',
+    'strategy': 'strategy',
+}
+
+
+def _rewrite_yaml_mapping(el, namespace, collection, spec):
+    assert isinstance(el, Mapping)
+
+    _rewrite_yaml_mapping_keys(el, namespace, collection, spec)
+    _rewrite_yaml_mapping_values(el, namespace, collection, spec)
+
+
+def _rewrite_yaml_mapping_keys(el, namespace, collection, spec):
+    for key in el.keys():
+        plugin_type = KEYWORD_TO_PLUGIN_MAP.get(key)
+        if plugin_type:
+            try:
+                if get_plugin_collection(el[key], plugin_type, spec) == collection:
+                    el[key] = get_plugin_fqcn(namespace, collection, el[key])
+            except LookupError:
+                # TODO better var detection
+                # TODO make a report of these at the end of the execution and/or into a file
+                if '{{' in el[key]:
+                    logger.error('could not rewrite "%s: %s"' % (key, el[key]))
+
+        prefix = 'with_'
+        if prefix in key:
+            prefix_len = len(prefix)
+
+            if not key.startswith(prefix):
+                continue
+            plugin_name = key[prefix_len:]
+            try:
+                if get_plugin_collection(plugin_name, 'lookup', spec) == collection:
+                    el[prefix + get_plugin_fqcn(namespace, collection, plugin_name)] = el[key]
+                    del el[key]
+            except LookupError:
+                pass
+
+        try:
+            if key in get_plugins_from_collection(collection, 'modules', spec):
+                new_module_name = get_plugin_fqcn(namespace, collection, key)
+                el[new_module_name] = el[key]
+                del el[key]
+        except LookupError:
+            pass
+
+
+def _rewrite_yaml_mapping_values(el, namespace, collection, spec):
+    for key, value in el.items():
+        if isinstance(value, Mapping):
+            _rewrite_yaml_mapping(el[key], namespace, collection, spec)
+        elif isinstance(value, list):
+            for idx, item in enumerate(value):
+                if isinstance(item, Mapping):
+                    _rewrite_yaml_mapping(el[key][idx], namespace, collection, spec)
+                else:
+                    if key == 'module_blacklist':
+                        if item in get_plugins_from_collection(collection, 'modules', spec):
+                            el[key][idx] = get_plugin_fqcn(namespace, collection, el[key][idx])
+
+                    el[key][idx] = _rewrite_yaml_lookup(el[key][idx], namespace, collection, spec)
+                    el[key][idx] = _rewrite_yaml_filter(el[key][idx], namespace, collection, spec)
+                    el[key][idx] = _rewrite_yaml_test(el[key][idx], namespace, collection, spec)
+        elif isinstance(value, str):
+            el[key] = _rewrite_yaml_lookup(el[key], namespace, collection, spec)
+            el[key] = _rewrite_yaml_filter(el[key], namespace, collection, spec)
+            el[key] = _rewrite_yaml_test(el[key], namespace, collection, spec)
+
+
+def _rewrite_yaml_lookup(value, namespace, collection, spec):
+    if not ('lookup(' in value or 'query(' in value or 'q(' in value):
+        return value
+
+    for plugin_name in get_plugins_from_collection(collection, 'lookup', spec):
+        if plugin_name in value:
+            value = value.replace(plugin_name, get_plugin_fqcn(namespace, collection, plugin_name))
+
+    return value
+
+
+def _rewrite_yaml_filter(value, namespace, collection, spec):
+    if '|' not in value:
+        return value
+
+    for filter_plugin_name in get_plugins_from_collection(collection, 'filter', spec):
+        imported_module = import_module('ansible.plugins.filter.' + filter_plugin_name)
+        fm = getattr(imported_module, 'FilterModule', None)
+        if fm is None:
+            continue
+        filters = fm().filters().keys()
+        for found_filter in [match[5] for match in FILTER_RE.findall(value)]:
+            if found_filter in filters:
+                value = value.replace(found_filter, get_plugin_fqcn(namespace, collection, found_filter))
+    return value
+
+
+def _rewrite_yaml_test(value, namespace, collection, spec):
+    if ' is ' not in value:
+        return value
+
+    for test_plugin_name in get_plugins_from_collection(collection, 'test', spec):
+        imported_module = import_module('ansible.plugins.test.' + test_plugin_name)
+        tm = getattr(imported_module, 'TestModule', None)
+        if tm is None:
+            continue
+        tests = tm().tests().keys()
+        for found_test in [match[5] for match in TEST_RE.findall(value)]:
+            if found_test in tests:
+                value = value.replace(found_test, get_plugin_fqcn(namespace, collection, found_test))
+    return value
+
+
+##############################################################################
+# Rewrite integration tests END
+##############################################################################
 
 
 def main():
