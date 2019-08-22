@@ -205,7 +205,9 @@ def rewrite_doc_fragments(plugin_data, collection, spec, args):
     deps = []
     for fragment in doc_finder.fragments:
         try:
-            fragment_collection = get_plugin_collection(fragment, 'doc_fragments', spec)
+            # some doc_fragments use subsections (e.g. vmware.vcenter_documentation)
+            fragment_name = fragment.split('.')[0]
+            fragment_collection = get_plugin_collection(fragment_name, 'doc_fragments', spec)
         except LookupError:
             # plugin not in spec, assuming it stays in core and leaving as is
             continue
