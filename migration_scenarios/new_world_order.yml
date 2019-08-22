@@ -157,10 +157,21 @@ bigip:
     doc_fragments:
     - f5.py
     modules:
+    - network/f5/_bigip_asm_policy.py
     - network/f5/_bigip_device_facts.py
+    - network/f5/_bigip_facts.py
+    - network/f5/_bigip_gtm_facts.py
+    - network/f5/_bigip_iapplx_package.py
+    - network/f5/_bigip_security_address_list.py
+    - network/f5/_bigip_security_port_list.py
+    - network/f5/_bigip_traffic_group.py
+    - network/f5/_bigiq_device_facts.py
+    - network/f5/bigip_apm_acl.py
+    - network/f5/bigip_apm_network_access.py
     - network/f5/bigip_apm_policy_fetch.py
     - network/f5/bigip_apm_policy_import.py
     - network/f5/bigip_appsvcs_extension.py
+    - network/f5/bigip_asm_dos_application.py
     - network/f5/bigip_asm_policy_fetch.py
     - network/f5/bigip_asm_policy_import.py
     - network/f5/bigip_asm_policy_manage.py
@@ -174,13 +185,14 @@ bigip:
     - network/f5/bigip_data_group.py
     - network/f5/bigip_device_auth.py
     - network/f5/bigip_device_auth_ldap.py
+    - network/f5/bigip_device_certificate.py
     - network/f5/bigip_device_connectivity.py
     - network/f5/bigip_device_dns.py
-    - network/f5/bigip_device_info.py
     - network/f5/bigip_device_group.py
     - network/f5/bigip_device_group_member.py
     - network/f5/bigip_device_ha_group.py
     - network/f5/bigip_device_httpd.py
+    - network/f5/bigip_device_info.py
     - network/f5/bigip_device_license.py
     - network/f5/bigip_device_ntp.py
     - network/f5/bigip_device_sshd.py
@@ -196,10 +208,13 @@ bigip:
     - network/f5/bigip_firewall_dos_profile.py
     - network/f5/bigip_firewall_dos_vector.py
     - network/f5/bigip_firewall_global_rules.py
+    - network/f5/bigip_firewall_log_profile.py
+    - network/f5/bigip_firewall_log_profile_network.py
     - network/f5/bigip_firewall_policy.py
     - network/f5/bigip_firewall_port_list.py
     - network/f5/bigip_firewall_rule.py
     - network/f5/bigip_firewall_rule_list.py
+    - network/f5/bigip_firewall_schedule.py
     - network/f5/bigip_gtm_datacenter.py
     - network/f5/bigip_gtm_global.py
     - network/f5/bigip_gtm_monitor_bigip.py
@@ -227,6 +242,11 @@ bigip:
     - network/f5/bigip_log_publisher.py
     - network/f5/bigip_lx_package.py
     - network/f5/bigip_management_route.py
+    - network/f5/bigip_message_routing_peer.py
+    - network/f5/bigip_message_routing_protocol.py
+    - network/f5/bigip_message_routing_route.py
+    - network/f5/bigip_message_routing_router.py
+    - network/f5/bigip_message_routing_transport_config.py
     - network/f5/bigip_monitor_dns.py
     - network/f5/bigip_monitor_external.py
     - network/f5/bigip_monitor_gateway_icmp.py
@@ -262,11 +282,13 @@ bigip:
     - network/f5/bigip_qkview.py
     - network/f5/bigip_remote_role.py
     - network/f5/bigip_remote_syslog.py
+    - network/f5/bigip_remote_user.py
     - network/f5/bigip_routedomain.py
     - network/f5/bigip_selfip.py
     - network/f5/bigip_service_policy.py
     - network/f5/bigip_smtp.py
     - network/f5/bigip_snat_pool.py
+    - network/f5/bigip_snat_translation.py
     - network/f5/bigip_snmp.py
     - network/f5/bigip_snmp_community.py
     - network/f5/bigip_snmp_trap.py
@@ -292,6 +314,19 @@ bigip:
     - network/f5/bigip_virtual_server.py
     - network/f5/bigip_vlan.py
     - network/f5/bigip_wait.py
+    - network/f5/bigiq_application_fasthttp.py
+    - network/f5/bigiq_application_fastl4_tcp.py
+    - network/f5/bigiq_application_fastl4_udp.py
+    - network/f5/bigiq_application_http.py
+    - network/f5/bigiq_application_https_offload.py
+    - network/f5/bigiq_application_https_waf.py
+    - network/f5/bigiq_device_discovery.py
+    - network/f5/bigiq_device_info.py
+    - network/f5/bigiq_regkey_license.py
+    - network/f5/bigiq_regkey_license_assignment.py
+    - network/f5/bigiq_regkey_pool.py
+    - network/f5/bigiq_utility_license.py
+    - network/f5/bigiq_utility_license_assignment.py
     module_utils:
     - network/f5/bigip.py
     - network/f5/bigiq.py
@@ -325,6 +360,7 @@ eos:
     modules:
     - network/eos/_eos_interface.py
     - network/eos/_eos_l2_interface.py
+    - network/eos/_eos_l3_interface.py
     - network/eos/_eos_linkagg.py
     - network/eos/_eos_vlan.py
     - network/eos/eos_banner.py
@@ -335,7 +371,8 @@ eos:
     - network/eos/eos_facts.py
     - network/eos/eos_interfaces.py
     - network/eos/eos_l2_interfaces.py
-    - network/eos/eos_l3_interface.py
+    - network/eos/eos_l3_interfaces.py
+    - network/eos/eos_lacp.py
     - network/eos/eos_lag_interfaces.py
     - network/eos/eos_lldp.py
     - network/eos/eos_logging.py
