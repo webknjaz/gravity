@@ -389,6 +389,7 @@ def assemble_collections(spec, args):
     checkout_path = os.path.join(releases_dir, f'{DEVEL_BRANCH}.git')
     collections_base_dir = os.path.join(args.vardir, 'collections')
     meta_dir = os.path.join(args.vardir, 'meta')
+    integration_test_dirs = []
 
     resolve_spec(spec, checkout_path)
 
@@ -506,11 +507,12 @@ def assemble_collections(spec, args):
 
                 write_text_into_file(dest, plugin_data_new)
 
+                integration_test_dirs.extend(poor_mans_integration_tests_discovery(checkout_path, plugin_type, plugin))
                 # process unit tests TODO: sanity? , integration?
                 #copy_unit_tests(plugin, collection, spec, args)
 
         # FIXME need to hack PyYAML to preserve formatting (not how much it's possible or how much it is work) or use e.g. ruamel.yaml
-        rewrite_integration_tests(checkout_path, collection_dir, args.namespace, collection, spec)
+        rewrite_integration_tests(integration_test_dirs, checkout_path, collection_dir, args.namespace, collection, spec)
 
         # write collection metadata
         write_yaml_into_file_as_is(
@@ -703,21 +705,30 @@ def copy_tests(plugin, coll, spec, args):
 # Rewrite integration tests
 ##############################################################################
 
-def rewrite_integration_tests(checkout_dir, collection_dir, namespace, collection, spec):
+
+def poor_mans_integration_tests_discovery(checkout_dir, plugin_type, plugin_name):
+    # FIXME
+    if plugin_type != 'modules':
+        return []
+
+    # FIXME this might be actually enough for modules integration tests, at least for the most part
+    files = glob.glob(os.path.join(checkout_dir, 'test/integration/targets', os.path.basename(os.path.splitext(plugin_name)[0])))
+    for fname in files:
+        logger.debug('Found integration tests for %s %s in %s' % (plugin_type, plugin_name, fname))
+
+    return files
+
+
+def rewrite_integration_tests(test_dirs, checkout_dir, collection_dir, namespace, collection, spec):
     # FIXME move to diff file
-    # FIXME look in diff collection too
+    # FIXME look in diff collection too + deps
     # FIXME rewrite usage of modules in library/
-    # FIXME deps
     # FIXME module_defaults groups
-    # FIXME discovery
     if collection != 'yum_collection':
         return
-    test_dirs = [
-        'test/integration/targets/yum',
-    ]
 
     for test_dir in test_dirs:
-        for dirpath, dirnames, filenames in os.walk(os.path.join(checkout_dir, test_dir)):
+        for dirpath, dirnames, filenames in os.walk(test_dir):
             for filename in filenames:
                 full_path = os.path.join(dirpath, filename)
                 logger.debug(full_path)
@@ -941,7 +952,7 @@ def _rewrite_yaml_test(value, namespace, collection, spec):
         if tm is None:
             continue
         tests = tm().tests().keys()
-        for found_test in [match[5] for match in TEST_RE.findall(value)]:
+        for found_test in (match[5] for match in TEST_RE.findall(value)):
             if found_test in tests:
                 value = value.replace(found_test, get_plugin_fqcn(namespace, collection, found_test))
     return value
