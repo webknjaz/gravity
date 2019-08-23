@@ -14,6 +14,7 @@ from string import Template
 
 from logzero import logger
 
+from baron.parser import ParsingError
 import redbaron
 
 
@@ -227,7 +228,7 @@ def rewrite_doc_fragments(plugin_data, collection, spec, args):
     return plugin_data, deps
 
 
-def rewrite_imports(mod_src_text, collection, spec, namespace):
+def rewrite_imports(mod_fst, collection, spec, namespace):
     """Rewrite imports map."""
     plugins_path = ('ansible_collections', namespace, collection, 'plugins')
     import_map = {
@@ -235,14 +236,7 @@ def rewrite_imports(mod_src_text, collection, spec, namespace):
         ('ansible', 'plugins'): plugins_path,
     }
 
-    try:
-        mod_fst = redbaron.RedBaron(mod_src_text)
-    except Exception:
-        logger.error('failed parsing on %s' % mod_src_text)
-        raise
-
-    deps = rewrite_imports_in_fst(mod_fst, import_map, collection, spec)
-    return mod_fst.dumps(), deps
+    return rewrite_imports_in_fst(mod_fst, import_map, collection, spec)
 
 
 def match_import_src(imp_src, import_map):
@@ -317,6 +311,16 @@ def read_text_from_file(path):
 def write_text_into_file(path, text):
     with open(path, 'w') as f:
         return f.write(text)
+
+
+def read_module_txt_n_fst(path):
+    """Parse module source code in form of Full Syntax Tree."""
+    mod_src_text = read_text_from_file(path)
+    try:
+        return mod_src_text, redbaron.RedBaron(mod_src_text)
+    except ParsingError:
+        logger.exception('failed parsing on %s', mod_src_text)
+        raise
 
 
 def resolve_spec(spec, checkoutdir):
@@ -437,20 +441,20 @@ def assemble_collections(spec, args):
                     shutil.copyfile(src, dest)
                     continue
 
-                plugin_data = read_text_from_file(src)
-                plugin_data_new = plugin_data[:]
+                mod_src_text, mod_fst = read_module_txt_n_fst(src)
 
                 # were any lines nullified?
                 #extralines = False
 
-                plugin_data_new, import_dependencies = rewrite_imports(plugin_data_new, collection, spec, args.namespace)
+                import_dependencies = rewrite_imports(mod_fst, collection, spec, args.namespace)
+                plugin_data_new = mod_fst.dumps()
                 plugin_data_new, docs_dependencies = rewrite_doc_fragments(plugin_data_new, collection, spec, args)
 
                 # clean too many empty lines
                 #if extralines:
                 #    data = clean_extra_lines(data)
 
-                if plugin_data != plugin_data_new:
+                if mod_src_text != plugin_data_new:
                     for dep in docs_dependencies + import_dependencies:
                         dep_collection = '%s.%s' % (args.namespace, dep)
                         # FIXME hardcoded version
