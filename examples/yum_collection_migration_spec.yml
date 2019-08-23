@@ -50,3 +50,7 @@ dep_collection2:
   module_utils:
     - yumdnf.py
     - network/f5/common.py
+
+dep_collection3:
+  modules:
+    - packaging/os/yum_repository.py
