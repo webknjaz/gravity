@@ -26,6 +26,10 @@ COLLECTION_NAMESPACE = 'test_migrate_ns'
 PLUGIN_EXCEPTION_PATHS = {'modules': 'lib/ansible/modules', 'module_utils': 'lib/ansible/module_utils', 'lookups': 'lib/ansible/plugins/lookup'}
 
 
+RAW_STR_TMPL = "r'''{str_val}'''"
+STR_TMPL = "'''{str_val}'''"
+
+
 core = {}
 
 def add_core(ptype, name):
@@ -179,35 +183,59 @@ def get_plugin_collection(plugin_name, plugin_type, spec):
     raise LookupError('Could not find "%s" named "%s" in any collection in the spec' % (plugin_type, plugin_name))
 
 
-def rewrite_doc_fragments(plugin_data, collection, spec, args):
-    import ast
-    class DocFragmentFinderVisitor(ast.NodeVisitor):
-        def __init__(self):
-            self.fragments = []
+def rewrite_doc_fragments(mod_fst, collection, spec, namespace):
+    try:
+        doc_val = (
+            mod_fst.
+            find_all('assignment').
+            find('name', value='DOCUMENTATION').
+            parent.
+            value
+        )
+    except AttributeError:
+        raise LookupError('No DOCUMENTATION found')
 
-        def visit_Assign(self, node):
-            if type(node.value) != ast.Str:
-                return
+    doc_str_tmpl = RAW_STR_TMPL if doc_val.type == 'raw_string' else STR_TMPL
+    doc_txt = doc_val.to_python()
 
-            for name in node.targets:
-                if getattr(name, 'id', '') == 'DOCUMENTATION':
-                    docs = node.value.s.strip('\n')
-                    docs_parsed = yaml.safe_load(docs)
-                    self.fragments = docs_parsed.get('extends_documentation_fragment', [])
-                    if not isinstance(self.fragments, list):
-                        self.fragments = [self.fragments]
+    try:
+        ex_val = (
+            mod_fst.
+            find_all('assignment').
+            find('name', value='EXAMPLES').
+            parent.
+            value
+        )
+        ex_str_tmpl = RAW_STR_TMPL if ex_val.type == 'raw_string' else STR_TMPL
+    except AttributeError:
+        ex_val = None
 
-    # TODO: use ansible-doc --json instead? plugin loader/docs directly?
+    try:
+        ret_val = (
+            mod_fst.
+            find_all('assignment').
+            find('name', value='RETURN').
+            parent.
+            value
+        )
+        ret_str_tmpl = (
+            RAW_STR_TMPL if ret_val.type == 'raw_string'
+            else STR_TMPL
+        )
+    except AttributeError:
+        ret_val = None
 
-    tree = ast.parse(plugin_data)
-    doc_finder = DocFragmentFinderVisitor()
-    doc_finder.visit(tree)
+    docs_parsed = yaml.safe_load(doc_txt.strip('\n'))
+
+    fragments = docs_parsed.get('extends_documentation_fragment', [])
+    if not isinstance(fragments, list):
+        fragments = [fragments]
 
     deps = []
-    for fragment in doc_finder.fragments:
+    for fragment in fragments:
+        # some doc_fragments use subsections (e.g. vmware.vcenter_documentation)
+        fragment_name, _dot, _rest = fragment.partition('.')
         try:
-            # some doc_fragments use subsections (e.g. vmware.vcenter_documentation)
-            fragment_name = fragment.split('.')[0]
             fragment_collection = get_plugin_collection(fragment_name, 'doc_fragments', spec)
         except LookupError:
             # plugin not in spec, assuming it stays in core and leaving as is
@@ -218,14 +246,25 @@ def rewrite_doc_fragments(plugin_data, collection, spec, args):
             continue
 
         # TODO what if it's in a different namespace (different spec)? do we care?
-        new_fragment = '%s.%s.%s' % (args.namespace, fragment_collection, fragment)
-        # TODO make sure to replace only in DOCUMENTATION
-        plugin_data = plugin_data.replace(fragment, new_fragment)
+        new_fragment = f'{namespace}.{fragment_collection}.{fragment}'
+
+        # TODO figure out whether this can be improved
+        doc_val.value = doc_str_tmpl.format(
+            str_val=doc_txt.replace(fragment, new_fragment),
+        )
+        if ex_val:
+            ex_val.value = ex_str_tmpl.format(
+                str_val=ex_val.to_python().replace(fragment, new_fragment),
+            )
+        if ret_val:
+            ret_val.value = ret_str_tmpl.format(
+                str_val=ret_val.to_python().replace(fragment, new_fragment),
+            )
 
         if collection != fragment_collection:
             deps.append(fragment_collection)
 
-    return plugin_data, deps
+    return deps
 
 
 def rewrite_imports(mod_fst, collection, spec, namespace):
@@ -447,8 +486,11 @@ def assemble_collections(spec, args):
                 #extralines = False
 
                 import_dependencies = rewrite_imports(mod_fst, collection, spec, args.namespace)
+                try:
+                    docs_dependencies = rewrite_doc_fragments(mod_fst, collection, spec, args.namespace)
+                except LookupError as err:
+                    logger.info('%s in %s', err, src)
                 plugin_data_new = mod_fst.dumps()
-                plugin_data_new, docs_dependencies = rewrite_doc_fragments(plugin_data_new, collection, spec, args)
 
                 # clean too many empty lines
                 #if extralines:
