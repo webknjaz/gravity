@@ -59,51 +59,19 @@ def add_manual_check(key, value):
     manual_check.append((key, value))
 
 
-def _run_command(cmd=None, check_rc=True):
-    logger.debug(cmd)
-    if not isinstance(cmd, bytes):
-        cmd = cmd.encode('utf-8')
-    p = subprocess.Popen(
-        cmd,
-        shell=True,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE
-    )
-    (so, se) = p.communicate()
-
-    if check_rc and p.returncode != 0:
-        raise RuntimeError(se)
-
-    so = so.decode('utf-8')
-    se = se.decode('utf-8')
-
-    return (p.returncode, so, se)
-
-
-def run_command(cmd=None, check_rc=True):
-    (rc, so, se) = _run_command(cmd, check_rc)
-    return {
-        'rc': rc,
-        'so': so,
-        'se': se
-    }
-
-
 def checkout_repo(vardir=VARDIR, refresh=False):
     releases_dir = os.path.join(vardir, 'releases')
     devel_path = os.path.join(releases_dir, f'{DEVEL_BRANCH}.git')
 
     if refresh and os.path.exists(devel_path):
-        # TODO do we want/is it worth to use a git library instead?
-        cmd = 'cd %s; git checkout %s; git pull' % (devel_path, DEVEL_BRANCH)
-        rc, stdout, stderr = _run_command(cmd)
+        subprocess.check_call(('git', 'checkout', DEVEL_BRANCH), cwd=devel_path)
+        subprocess.check_call(('git', 'pull'), cwd=devel_path)
 
     if not os.path.exists(releases_dir):
         os.makedirs(releases_dir)
 
     if not os.path.exists(devel_path):
-        cmd = 'git clone %s %s; cd %s; git checkout %s' % (DEVEL_URL, devel_path, devel_path, DEVEL_BRANCH)
-        rc, stdout, stderr = _run_command(cmd)
+        subprocess.check_call(('git', 'clone', DEVEL_URL, f'{DEVEL_BRANCH}.git'), cwd=releases_dir)
 
 
 def read_yaml_file(path):
@@ -126,64 +94,6 @@ def load_spec_file(spec_file):
         sys.exit("Cannot use spec file, ended up with empty spec")
 
     return spec
-
-
-def clean_extra_lines(rawtext):
-    lines = rawtext.split('\n')
-
-    imports_start = None
-    imports_stop = None
-    for idx, x in enumerate(lines):
-        if imports_start is None:
-            if x.startswith('from ') and not 'absolute_import' in x:
-                imports_start = idx
-                continue
-
-        if not x:
-            continue
-
-        if x.startswith('from '):
-            continue
-
-        if imports_start and imports_stop is None:
-            if x[0].isalnum():
-                imports_stop = idx
-                break
-
-    empty_lines = [x for x in range(imports_start, imports_stop)]
-    empty_lines = [x for x in empty_lines if not lines[x].strip()]
-
-    if not empty_lines:
-        return rawtext
-
-    if len(empty_lines) == 1:
-        return rawtext
-
-    # keep 2 empty lines between imports and definitions
-    if len(empty_lines) == 2 and (empty_lines[-1] - empty_lines[-2] == 1):
-        return rawtext
-
-    print(lines[imports_start:imports_stop])
-
-    while empty_lines:
-        try:
-            print('DELETING: %s' % lines[empty_lines[0]])
-        except IndexError as e:
-            print(e)
-            import epdb; epdb.st()
-        del lines[empty_lines[0]]
-        del empty_lines[0]
-        empty_lines = [x-1 for x in empty_lines]
-        if [x for x in empty_lines if x <= 0]:
-            break
-
-        if len(empty_lines) <= 2:
-            break
-
-        #import epdb; epdb.st()
-
-    rawtext = '\n'.join(lines)
-    return rawtext
 
 
 def get_plugin_collection(plugin_name, plugin_type, spec):
@@ -558,9 +468,6 @@ def assemble_collections(spec, args):
 
                 mod_src_text, mod_fst = read_module_txt_n_fst(src)
 
-                # were any lines nullified?
-                #extralines = False
-
                 import_dependencies = rewrite_imports(mod_fst, collection, spec, args.namespace)
                 try:
                     docs_dependencies = rewrite_doc_fragments(mod_fst, collection, spec, args.namespace)
@@ -568,10 +475,6 @@ def assemble_collections(spec, args):
                     docs_dependencies = []
                     logger.info('%s in %s', err, src)
                 plugin_data_new = mod_fst.dumps()
-
-                # clean too many empty lines
-                #if extralines:
-                #    data = clean_extra_lines(data)
 
                 if mod_src_text != plugin_data_new:
                     for dep in docs_dependencies + import_dependencies:
