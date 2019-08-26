@@ -74,6 +74,7 @@ def checkout_repo(vardir=VARDIR, refresh=False):
         subprocess.check_call(('git', 'clone', DEVEL_URL, f'{DEVEL_BRANCH}.git'), cwd=releases_dir)
 
 
+# ===== FILE utils =====
 def read_yaml_file(path):
     with open(path, 'rb') as yaml_file:
         return yaml.safe_load(yaml_file)
@@ -84,6 +85,17 @@ def write_yaml_into_file_as_is(path, data):
     write_text_into_file(path, yaml_text)
 
 
+def read_text_from_file(path):
+    with open(path, 'r') as f:
+        return f.read()
+
+
+def write_text_into_file(path, text):
+    with open(path, 'w') as f:
+        return f.write(text)
+
+
+# ===== SPEC utils =====
 def load_spec_file(spec_file):
 
     spec = read_yaml_file(spec_file)  # TODO: capture yamlerror?
@@ -96,6 +108,27 @@ def load_spec_file(spec_file):
     return spec
 
 
+def resolve_spec(spec, checkoutdir):
+
+    # TODO: add negation? entry: x/* \n entry: !x/base.py
+    for coll in spec.keys():
+        for ptype in spec[coll].keys():
+            plugin_base = os.path.join(checkoutdir, PLUGIN_EXCEPTION_PATHS.get(ptype, os.path.join('lib', 'ansible', 'plugins', ptype)))
+            replace_base = '%s/' % plugin_base
+            for entry in spec[coll][ptype]:
+                if r'*' in entry or r'?' in entry:
+                    files = glob.glob(os.path.join(plugin_base, entry))
+                    for fname in files:
+                        if ptype != 'module_utils' and fname.endswith('__init__.py') or not os.path.isfile(fname):
+                            continue
+                        fname = fname.replace(replace_base, '')
+                        spec[coll][ptype].append(fname)
+
+                    # clean out glob entry
+                    spec[coll][ptype].remove(entry)
+
+
+# ===== GET_PLUGINS utils =====
 def get_plugin_collection(plugin_name, plugin_type, spec):
     for collection in spec.keys():
         if spec[collection]: # avoid empty collections
@@ -120,6 +153,7 @@ def get_plugin_fqcn(namespace, collection, plugin_name):
     return '%s.%s.%s' % (namespace, collection, plugin_name)
 
 
+# ===== REWRITE FUNCTIONS =====
 def rewrite_doc_fragments(mod_fst, collection, spec, namespace):
     try:
         doc_val = (
@@ -262,6 +296,15 @@ def rewrite_imports_in_fst(mod_fst, import_map, collection, spec):
     return deps
 
 
+def read_module_txt_n_fst(path):
+    """Parse module source code in form of Full Syntax Tree."""
+    mod_src_text = read_text_from_file(path)
+    try:
+        return mod_src_text, redbaron.RedBaron(mod_src_text)
+    except ParsingError:
+        logger.exception('failed parsing on %s', mod_src_text)
+        raise
+
 def copy_unit_tests(checkout_path, collection_dir, plugin_type, plugin, spec):
     """Find all unit tests and related artifacts for the given plugin.
 
@@ -322,46 +365,7 @@ def copy_unit_tests(checkout_path, collection_dir, plugin_type, plugin, spec):
     return copy_map
 
 
-def read_text_from_file(path):
-    with open(path, 'r') as f:
-        return f.read()
-
-
-def write_text_into_file(path, text):
-    with open(path, 'w') as f:
-        return f.write(text)
-
-
-def read_module_txt_n_fst(path):
-    """Parse module source code in form of Full Syntax Tree."""
-    mod_src_text = read_text_from_file(path)
-    try:
-        return mod_src_text, redbaron.RedBaron(mod_src_text)
-    except ParsingError:
-        logger.exception('failed parsing on %s', mod_src_text)
-        raise
-
-
-def resolve_spec(spec, checkoutdir):
-
-    # TODO: add negation? entry: x/* \n entry: !x/base.py
-    for coll in spec.keys():
-        for ptype in spec[coll].keys():
-            plugin_base = os.path.join(checkoutdir, PLUGIN_EXCEPTION_PATHS.get(ptype, os.path.join('lib', 'ansible', 'plugins', ptype)))
-            replace_base = '%s/' % plugin_base
-            for entry in spec[coll][ptype]:
-                if r'*' in entry or r'?' in entry:
-                    files = glob.glob(os.path.join(plugin_base, entry))
-                    for fname in files:
-                        if ptype != 'module_utils' and fname.endswith('__init__.py') or not os.path.isfile(fname):
-                            continue
-                        fname = fname.replace(replace_base, '')
-                        spec[coll][ptype].append(fname)
-
-                    # clean out glob entry
-                    spec[coll][ptype].remove(entry)
-
-
+# ===== MAKE COLLECTIONS =====
 def assemble_collections(spec, args):
     # NOTE releases_dir is already created by checkout_repo(), might want to move all that to something like ensure_dirs() ...
     releases_dir = os.path.join(args.vardir, 'releases')
@@ -581,118 +585,118 @@ def mark_moved_resources(checkout_dir, collection, migrated_to_collection):
     )
 
 
-def copy_tests(plugin, coll, spec, args):
-
-    # TODO: tests might also require rewriting imports, docfragments and even play/tasks,
-    #  why i made functions above from preexisting code
-    return
-
-    # UNIT TESTS
-    # need to fix these imports in the unit tests
-
-    dst = os.path.join(plugin, 'test', 'unit')
-    if not os.path.exists(dst):
-        os.makedirs(dst)
-    for uf in spec['units']:  # TODO: should we rely on spec or 'autofind' matching units of same name/type?
-        fuf = os.path.join(args.vardir, 'test', 'units', uf)
-        if os.path.isdir(fuf):
-            #import epdb; epdb.st()
-
-            fns = glob.glob('%s/*' % fuf)
-            for fn in fns:
-                if os.path.isdir(fn):
-                    try:
-                        shutil.copytree(fn, os.path.join(dst, os.path.basename(fn)))
-                    except Exception as e:
-                        pass
-                else:
-                    shutil.copy(fn, os.path.join(dst, os.path.basename(fn)))
-
-
-        elif os.path.isfile(fuf):
-            fuf_dst = os.path.join(dst, os.path.basename(fuf))
-            shutil.copy(fuf, fuf_dst)
-
-        cmd = 'find %s -type f -name "*.py"' % (dst)
-        res = run_command(cmd)
-        unit_files = sorted([x.strip() for x in res['so'].split('\n') if x.strip()])
-
-        for unit_file in unit_files:
-            # fix the module import paths to be relative
-            #   from ansible.modules.cloud.vmware import vmware_guest
-            #   from ...plugins.modules import vmware_guest
-
-            depth = unit_file.replace(cdir, '')
-            depth = depth.lstrip('/')
-            depth = os.path.dirname(depth)
-            depth = depth.split('/')
-            rel_path = '.'.join(['' for x in range(-1, len(depth))])
-
-            with open(unit_file, 'r') as f:
-                unit_lines = f.readlines()
-            unit_lines = [x.rstrip() for x in unit_lines]
-
-            changed = False
-
-            for module in module_names:
-                for li,line in enumerate(unit_lines):
-                    if line.startswith('from ') and line.endswith(module):
-                        unit_lines[li] = 'from %s.plugins.modules import %s' % (rel_path, module)
-                        changed = True
-
-            if changed:
-                with open(unit_file, 'w') as f:
-                    f.write('\n'.join(unit_lines))
-            #import epdb; epdb.st()
-
-
-        list_of_targets = []  # TODO: same as above require from spec or find for ourselves?
-        if list_of_targets:
-            dst = os.path.join(cdir, 'test', 'integration', 'targets')
-            if not os.path.exists(dst):
-                os.makedirs(dst)
-            for uf in v['targets']:
-                fuf = os.path.join(args.vardir, 'test', 'integration', 'targets', uf)
-                duf = os.path.join(dst, os.path.basename(fuf))
-                if not os.path.exists(os.path.join(dst, os.path.basename(fuf))):
-                    try:
-                        shutil.copytree(fuf, duf)
-                    except Exception as e:
-                        import epdb; epdb.st()
-
-                # set namespace for all module refs
-                cmd = 'find %s -type f -name "*.yml"' % (duf)
-                res = run_command(cmd)
-                yfiles = res['so'].split('\n')
-                yfiles = [x.strip() for x in yfiles if x.strip()]
-
-                for yf in yfiles:
-                    with open(yf, 'r') as f:
-                        ydata = f.read()
-                    _ydata = ydata[:]
-
-                    for module in v['modules']:
-                        msrc = os.path.basename(module)
-                        msrc = msrc.replace('.py', '')
-                        msrc = msrc.replace('.ps1', '')
-                        msrc = msrc.replace('.ps2', '')
-
-                        mdst = '%s.%s.%s' % (args.namespace, coll, msrc)
-
-                        if msrc not in ydata or mdst in ydata:
-                            continue
-
-                        #import epdb; epdb.st()
-                        ydata = ydata.replace(msrc, mdst)
-
-                    # fix import_role calls?
-                    #tasks = yaml.load(ydata)
-                    #import epdb; epdb.st()
-
-                    if ydata != _ydata:
-                        logger.info('fixing module calls in %s' % yf)
-                        with open(yf, 'w') as f:
-                            f.write(ydata)
+#def copy_tests(plugin, coll, spec, args):
+#
+#    # TODO: tests might also require rewriting imports, docfragments and even play/tasks,
+#    #  why i made functions above from preexisting code
+#    return
+#
+#    # UNIT TESTS
+#    # need to fix these imports in the unit tests
+#
+#    dst = os.path.join(plugin, 'test', 'unit')
+#    if not os.path.exists(dst):
+#        os.makedirs(dst)
+#    for uf in spec['units']:  # TODO: should we rely on spec or 'autofind' matching units of same name/type?
+#        fuf = os.path.join(args.vardir, 'test', 'units', uf)
+#        if os.path.isdir(fuf):
+#            #import epdb; epdb.st()
+#
+#            fns = glob.glob('%s/*' % fuf)
+#            for fn in fns:
+#                if os.path.isdir(fn):
+#                    try:
+#                        shutil.copytree(fn, os.path.join(dst, os.path.basename(fn)))
+#                    except Exception as e:
+#                        pass
+#                else:
+#                    shutil.copy(fn, os.path.join(dst, os.path.basename(fn)))
+#
+#
+#        elif os.path.isfile(fuf):
+#            fuf_dst = os.path.join(dst, os.path.basename(fuf))
+#            shutil.copy(fuf, fuf_dst)
+#
+#        cmd = 'find %s -type f -name "*.py"' % (dst)
+#        res = run_command(cmd)
+#        unit_files = sorted([x.strip() for x in res['so'].split('\n') if x.strip()])
+#
+#        for unit_file in unit_files:
+#            # fix the module import paths to be relative
+#            #   from ansible.modules.cloud.vmware import vmware_guest
+#            #   from ...plugins.modules import vmware_guest
+#
+#            depth = unit_file.replace(cdir, '')
+#            depth = depth.lstrip('/')
+#            depth = os.path.dirname(depth)
+#            depth = depth.split('/')
+#            rel_path = '.'.join(['' for x in range(-1, len(depth))])
+#
+#            with open(unit_file, 'r') as f:
+#                unit_lines = f.readlines()
+#            unit_lines = [x.rstrip() for x in unit_lines]
+#
+#            changed = False
+#
+#            for module in module_names:
+#                for li,line in enumerate(unit_lines):
+#                    if line.startswith('from ') and line.endswith(module):
+#                        unit_lines[li] = 'from %s.plugins.modules import %s' % (rel_path, module)
+#                        changed = True
+#
+#            if changed:
+#                with open(unit_file, 'w') as f:
+#                    f.write('\n'.join(unit_lines))
+#            #import epdb; epdb.st()
+#
+#
+#        list_of_targets = []  # TODO: same as above require from spec or find for ourselves?
+#        if list_of_targets:
+#            dst = os.path.join(cdir, 'test', 'integration', 'targets')
+#            if not os.path.exists(dst):
+#                os.makedirs(dst)
+#            for uf in v['targets']:
+#                fuf = os.path.join(args.vardir, 'test', 'integration', 'targets', uf)
+#                duf = os.path.join(dst, os.path.basename(fuf))
+#                if not os.path.exists(os.path.join(dst, os.path.basename(fuf))):
+#                    try:
+#                        shutil.copytree(fuf, duf)
+#                    except Exception as e:
+#                        import epdb; epdb.st()
+#
+#                # set namespace for all module refs
+#                cmd = 'find %s -type f -name "*.yml"' % (duf)
+#                res = run_command(cmd)
+#                yfiles = res['so'].split('\n')
+#                yfiles = [x.strip() for x in yfiles if x.strip()]
+#
+#                for yf in yfiles:
+#                    with open(yf, 'r') as f:
+#                        ydata = f.read()
+#                    _ydata = ydata[:]
+#
+#                    for module in v['modules']:
+#                        msrc = os.path.basename(module)
+#                        msrc = msrc.replace('.py', '')
+#                        msrc = msrc.replace('.ps1', '')
+#                        msrc = msrc.replace('.ps2', '')
+#
+#                        mdst = '%s.%s.%s' % (args.namespace, coll, msrc)
+#
+#                        if msrc not in ydata or mdst in ydata:
+#                            continue
+#
+#                        #import epdb; epdb.st()
+#                        ydata = ydata.replace(msrc, mdst)
+#
+#                    # fix import_role calls?
+#                    #tasks = yaml.load(ydata)
+#                    #import epdb; epdb.st()
+#
+#                    if ydata != _ydata:
+#                        logger.info('fixing module calls in %s' % yf)
+#                        with open(yf, 'w') as f:
+#                            f.write(ydata)
 
 ##############################################################################
 # Rewrite integration tests
