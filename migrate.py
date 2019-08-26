@@ -995,7 +995,7 @@ def _rewrite_yaml_filter(value, namespace, collection, spec):
             if fm is None:
                 continue
             filters = fm().filters().keys()
-            for found_filter in [match[5] for match in FILTER_RE.findall(value)]:
+            for found_filter in (match[5] for match in FILTER_RE.findall(value)):
                 if found_filter in filters:
                     value = value.replace(found_filter, get_plugin_fqcn(namespace, coll, found_filter))
                     if collection != coll:
