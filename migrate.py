@@ -17,6 +17,7 @@ from collections.abc import Mapping, Sequence
 from importlib import import_module
 from string import Template
 
+from ansible.vars.reserved import is_reserved_name
 from logzero import logger
 
 from baron.parser import ParsingError
@@ -868,8 +869,11 @@ def _rewrite_yaml_mapping(el, namespace, collection, spec):
 
 
 def _rewrite_yaml_mapping_keys(el, namespace, collection, spec):
-    # FIXME filter keywords (block, always, ...) to not process them
     for key in el.keys():
+        if is_reserved_name(key):
+            logger.debug('skipping reserved name ' + key)
+            continue
+
         plugin_type = KEYWORD_TO_PLUGIN_MAP.get(key)
         if plugin_type:
             try:
