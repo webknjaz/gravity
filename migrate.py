@@ -923,18 +923,20 @@ def _rewrite_yaml_mapping_keys(el, namespace, collection, spec):
             except LookupError:
                 pass
 
-        try:
-            for coll in spec.keys():
-                for module in get_plugins_from_collection(coll, 'modules', spec):
-                    if key != module:
-                        continue
-                    new_module_name = get_plugin_fqcn(namespace, coll, key)
-                    el[new_module_name] = el[key]
-                    del el[key]
-                    if coll != collection:
-                        integration_tests_add_to_deps(collection, coll)
-        except LookupError:
-            pass
+        for coll in spec.keys():
+            try:
+                modules_in_collection = get_plugins_from_collection(coll, 'modules', spec)
+            except LookupError:
+                continue
+
+            for module in modules_in_collection:
+                if key != module:
+                    continue
+                new_module_name = get_plugin_fqcn(namespace, coll, key)
+                el[new_module_name] = el[key]
+                del el[key]
+                if coll != collection:
+                    integration_tests_add_to_deps(collection, coll)
 
 
 def integration_tests_add_to_deps(collection, dep_collection):
