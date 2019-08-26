@@ -513,7 +513,7 @@ def assemble_collections(spec, args):
                 #copy_unit_tests(plugin, collection, spec, args)
 
         # FIXME need to hack PyYAML to preserve formatting (not how much it's possible or how much it is work) or use e.g. ruamel.yaml
-        rewrite_integration_tests(integration_test_dirs, checkout_path, collection_dir, args.namespace, collection, spec)
+        rewrite_integration_tests(integration_test_dirs, checkout_path, collection_dir, args.namespace, collection, spec, args)
 
         global integration_tests_deps
         for dep in integration_tests_deps:
@@ -729,9 +729,8 @@ def poor_mans_integration_tests_discovery(checkout_dir, plugin_type, plugin_name
 
 integration_tests_deps = set()
 
-def rewrite_integration_tests(test_dirs, checkout_dir, collection_dir, namespace, collection, spec):
+def rewrite_integration_tests(test_dirs, checkout_dir, collection_dir, namespace, collection, spec, args):
     # FIXME move to diff file
-    # FIXME rewrite usage of modules in library/
     # FIXME module_defaults groups
 
     for test_dir in test_dirs:
@@ -746,7 +745,23 @@ def rewrite_integration_tests(test_dirs, checkout_dir, collection_dir, namespace
                 dest = os.path.join(dest_dir, filename)
 
                 dummy, ext = os.path.splitext(filename)
-                if ext in ('.yml', '.yaml'):
+
+                if ext in ('.py'):
+                    # FIXME duplicate code from the 'main' function
+                    plugin_data = read_text_from_file(full_path)
+                    plugin_data_new = plugin_data[:]
+
+                    plugin_data_new, import_dependencies = rewrite_imports(plugin_data_new, collection, spec, namespace)
+                    plugin_data_new, docs_dependencies = rewrite_doc_fragments(plugin_data_new, collection, spec, args)
+
+                    for dep in docs_dependencies + import_dependencies:
+                        integration_tests_add_to_deps(collection, dep)
+
+                    write_text_into_file(dest, plugin_data_new)
+                elif ext in ('.ps1'):
+                    # FIXME
+                    pass
+                elif ext in ('.yml', '.yaml'):
                     rewrite_yaml(full_path, dest, namespace, collection, spec)
                 elif ext in ('.sh',):
                     rewrite_sh(full_path, dest, namespace, collection, spec)
