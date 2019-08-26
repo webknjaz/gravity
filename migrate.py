@@ -41,6 +41,8 @@ STR_TMPL = "'''{str_val}'''"
 
 
 core = {}
+manual_check = []
+
 
 def add_core(ptype, name):
 
@@ -49,6 +51,12 @@ def add_core(ptype, name):
         core[ptype] = set()
 
     core[ptype].add(name)
+
+
+def add_manual_check(key, value):
+    global manual_check
+    # FIXME add the file too
+    manual_check.append((key, value))
 
 
 def _run_command(cmd=None, check_rc=True):
@@ -715,6 +723,13 @@ def copy_tests(plugin, coll, spec, args):
 # Rewrite integration tests
 ##############################################################################
 
+integration_tests_deps = set()
+
+def integration_tests_add_to_deps(collection, dep_collection):
+    global integration_tests_deps
+    integration_tests_deps.add(dep_collection)
+    logger.debug("Adding " + dep_collection + " as a dep for " + collection)
+
 
 def poor_mans_integration_tests_discovery(checkout_dir, plugin_type, plugin_name):
     # FIXME this might be actually enough for modules integration tests, at least for the most part
@@ -727,7 +742,6 @@ def poor_mans_integration_tests_discovery(checkout_dir, plugin_type, plugin_name
 
     return files
 
-integration_tests_deps = set()
 
 def rewrite_integration_tests(test_dirs, checkout_dir, collection_dir, namespace, collection, spec, args):
     # FIXME move to diff file
@@ -746,7 +760,7 @@ def rewrite_integration_tests(test_dirs, checkout_dir, collection_dir, namespace
 
                 dummy, ext = os.path.splitext(filename)
 
-                if ext in ('.py'):
+                if ext in ('.py',):
                     # FIXME duplicate code from the 'main' function
                     plugin_data = read_text_from_file(full_path)
                     plugin_data_new = plugin_data[:]
@@ -758,7 +772,7 @@ def rewrite_integration_tests(test_dirs, checkout_dir, collection_dir, namespace
                         integration_tests_add_to_deps(collection, dep)
 
                     write_text_into_file(dest, plugin_data_new)
-                elif ext in ('.ps1'):
+                elif ext in ('.ps1',):
                     # FIXME
                     pass
                 elif ext in ('.yml', '.yaml'):
@@ -864,6 +878,13 @@ def _rewrite_yaml(contents, namespace, collection, spec):
         _rewrite_yaml_mapping(contents, namespace, collection, spec)
 
 
+def _rewrite_yaml_mapping(el, namespace, collection, spec):
+    assert isinstance(el, Mapping)
+
+    _rewrite_yaml_mapping_keys(el, namespace, collection, spec)
+    _rewrite_yaml_mapping_values(el, namespace, collection, spec)
+
+
 KEYWORD_TO_PLUGIN_MAP = {
     'ansible_become_method': 'become',
     'ansible_connection': 'connection',
@@ -874,20 +895,6 @@ KEYWORD_TO_PLUGIN_MAP = {
     'plugin': 'inventory',
     'strategy': 'strategy',
 }
-
-
-def _rewrite_yaml_mapping(el, namespace, collection, spec):
-    assert isinstance(el, Mapping)
-
-    _rewrite_yaml_mapping_keys(el, namespace, collection, spec)
-    _rewrite_yaml_mapping_values(el, namespace, collection, spec)
-
-
-manual_check = []
-def add_to_manual_check(key, value):
-    global manual_check
-    # FIXME add the file too
-    manual_check.append((key, value))
 
 
 def _rewrite_yaml_mapping_keys(el, namespace, collection, spec):
@@ -905,7 +912,7 @@ def _rewrite_yaml_mapping_keys(el, namespace, collection, spec):
                     integration_tests_add_to_deps(collection, plugin_collection)
             except LookupError:
                 if '{{' in el[key]:
-                    add_to_manual_check(key, el[key])
+                    add_manual_check(key, el[key])
 
         prefix = 'with_'
         if prefix in key:
@@ -937,12 +944,6 @@ def _rewrite_yaml_mapping_keys(el, namespace, collection, spec):
                 del el[key]
                 if coll != collection:
                     integration_tests_add_to_deps(collection, coll)
-
-
-def integration_tests_add_to_deps(collection, dep_collection):
-    global integration_tests_deps
-    integration_tests_deps.add(dep_collection)
-    logger.debug("Adding " + dep_collection + " as a dep for " + collection)
 
 
 def _rewrite_yaml_mapping_values(el, namespace, collection, spec):
