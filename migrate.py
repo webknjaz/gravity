@@ -65,7 +65,7 @@ def checkout_repo(vardir=VARDIR, refresh=False):
 
     if refresh and os.path.exists(devel_path):
         subprocess.check_call(('git', 'checkout', DEVEL_BRANCH), cwd=devel_path)
-        subprocess.check_call(('git', 'pull'), cwd=devel_path)
+        subprocess.check_call(('git', 'pull', '--rebase'), cwd=devel_path)
 
     if not os.path.exists(releases_dir):
         os.makedirs(releases_dir)
