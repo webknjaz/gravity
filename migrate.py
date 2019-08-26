@@ -196,6 +196,8 @@ def rewrite_doc_fragments(mod_fst, collection, spec, namespace):
         raise LookupError('No DOCUMENTATION found')
 
     doc_str_tmpl = RAW_STR_TMPL if doc_val.type == 'raw_string' else STR_TMPL
+    # Turn `'strng'` into `strng` and  `r'strng'` into `strng`
+    # so that we don't feed a quoted string into the YAML parser:
     doc_txt = doc_val.to_python()
 
     docs_parsed = yaml.safe_load(doc_txt.strip('\n'))
@@ -221,6 +223,23 @@ def rewrite_doc_fragments(mod_fst, collection, spec, namespace):
         # TODO what if it's in a different namespace (different spec)? do we care?
         new_fragment = f'{namespace}.{fragment_collection}.{fragment}'
 
+        # `doc_val` holds a baron representation of the string node
+        # of type 'string' or 'raw_string'. Updating its `.value`
+        # via assigning the new one replaces the node in FST.
+        # Also, in order to generate a string or raw-string literal,
+        # we need to wrap it with a corresponding pair of quotes.
+        # If we don't do this, we'd generate the following Python code
+        # ```
+        # DOCUMENTATION = some string value
+        # ```
+        # instead of the correct
+        # ```
+        # DOCUMENTATION = r'''some string value'''
+        # ```
+        # or
+        # ```
+        # DOCUMENTATION = '''some string value'''
+        # ```
         # TODO figure out whether this can be improved
         doc_val.value = doc_str_tmpl.format(
             str_val=doc_txt.replace(fragment, new_fragment),
