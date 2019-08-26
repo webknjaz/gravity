@@ -868,6 +868,13 @@ def _rewrite_yaml_mapping(el, namespace, collection, spec):
     _rewrite_yaml_mapping_values(el, namespace, collection, spec)
 
 
+manual_check = []
+def add_to_manual_check(key, value):
+    global manual_check
+    # FIXME add the file too
+    manual_check.append((key, value))
+
+
 def _rewrite_yaml_mapping_keys(el, namespace, collection, spec):
     for key in el.keys():
         if is_reserved_name(key):
@@ -882,10 +889,8 @@ def _rewrite_yaml_mapping_keys(el, namespace, collection, spec):
                 if plugin_collection != collection:
                     integration_tests_add_to_deps(collection, plugin_collection)
             except LookupError:
-                # TODO better var detection
-                # TODO make a report of these at the end of the execution and/or into a file
                 if '{{' in el[key]:
-                    logger.error('could not rewrite "%s: %s"' % (key, el[key]))
+                    add_to_manual_check(key, el[key])
 
         prefix = 'with_'
         if prefix in key:
@@ -1031,6 +1036,11 @@ def main():
     global core
     print('======= Assumed stayed in core =======\n')
     print(yaml.dump(core))
+
+    global manual_check
+    print('======= Could not rewrite the following, please check manually =======\n')
+    for key, value in manual_check:
+        print(key + ": " + value)
 
 if __name__ == "__main__":
     main()
