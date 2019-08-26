@@ -198,33 +198,6 @@ def rewrite_doc_fragments(mod_fst, collection, spec, namespace):
     doc_str_tmpl = RAW_STR_TMPL if doc_val.type == 'raw_string' else STR_TMPL
     doc_txt = doc_val.to_python()
 
-    try:
-        ex_val = (
-            mod_fst.
-            find_all('assignment').
-            find('name', value='EXAMPLES').
-            parent.
-            value
-        )
-        ex_str_tmpl = RAW_STR_TMPL if ex_val.type == 'raw_string' else STR_TMPL
-    except AttributeError:
-        ex_val = None
-
-    try:
-        ret_val = (
-            mod_fst.
-            find_all('assignment').
-            find('name', value='RETURN').
-            parent.
-            value
-        )
-        ret_str_tmpl = (
-            RAW_STR_TMPL if ret_val.type == 'raw_string'
-            else STR_TMPL
-        )
-    except AttributeError:
-        ret_val = None
-
     docs_parsed = yaml.safe_load(doc_txt.strip('\n'))
 
     fragments = docs_parsed.get('extends_documentation_fragment', [])
@@ -252,14 +225,6 @@ def rewrite_doc_fragments(mod_fst, collection, spec, namespace):
         doc_val.value = doc_str_tmpl.format(
             str_val=doc_txt.replace(fragment, new_fragment),
         )
-        if ex_val:
-            ex_val.value = ex_str_tmpl.format(
-                str_val=ex_val.to_python().replace(fragment, new_fragment),
-            )
-        if ret_val:
-            ret_val.value = ret_str_tmpl.format(
-                str_val=ret_val.to_python().replace(fragment, new_fragment),
-            )
 
         if collection != fragment_collection:
             deps.append(fragment_collection)
