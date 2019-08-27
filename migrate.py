@@ -899,6 +899,7 @@ KEYWORD_TO_PLUGIN_MAP = {
 
 
 def _rewrite_yaml_mapping_keys(el, namespace, collection, spec):
+    translate = []
     for key in el.keys():
         if is_reserved_name(key):
             logger.debug('skipping reserved name ' + key)
@@ -923,7 +924,7 @@ def _rewrite_yaml_mapping_keys(el, namespace, collection, spec):
             plugin_name = key[prefix_len:]
             try:
                 plugin_collection = get_plugin_collection(plugin_name, 'lookup', spec)
-                el[prefix + get_plugin_fqcn(namespace, plugin_collection, plugin_name)] = el.pop(key)
+                translate.append((prefix + get_plugin_fqcn(namespace, plugin_collection, plugin_name), key))
                 integration_tests_add_to_deps(collection, plugin_collection)
             except LookupError:
                 pass
@@ -938,8 +939,11 @@ def _rewrite_yaml_mapping_keys(el, namespace, collection, spec):
                 if key != module:
                     continue
                 new_module_name = get_plugin_fqcn(namespace, coll, key)
-                el[new_module_name] = el.pop(key)
+                translate.append((new_module_name, key))
                 integration_tests_add_to_deps(collection, coll)
+
+    for new_key, old_key in translate:
+        el[new_key] = el.pop(old_key)
 
 
 def _rewrite_yaml_mapping_values(el, namespace, collection, spec):
