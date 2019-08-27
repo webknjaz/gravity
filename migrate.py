@@ -726,6 +726,9 @@ def copy_tests(plugin, coll, spec, args):
 integration_tests_deps = set()
 
 def integration_tests_add_to_deps(collection, dep_collection):
+    if collection == dep_collection:
+        return
+
     global integration_tests_deps
     integration_tests_deps.add(dep_collection)
     logger.debug("Adding " + dep_collection + " as a dep for " + collection)
@@ -810,8 +813,7 @@ def rewrite_sh(full_path, dest, namespace, collection, spec):
                 new_plugin_name = get_plugin_fqcn(namespace, coll, plugin_name)
                 contents = contents.replace(key + '=' + plugin_name, key + '=' + new_plugin_name)
                 contents = contents.replace(key + ' ' + plugin_name, key + ' ' + new_plugin_name)
-                if collection != coll:
-                    integration_tests_add_to_deps(collection, coll)
+                integration_tests_add_to_deps(collection, coll)
 
     write_text_into_file(dest, contents)
     shutil.copystat(full_path, dest)
@@ -856,8 +858,7 @@ def rewrite_ini_section(config, key_map, section, namespace, collection, spec):
             try:
                 plugin_collection = get_plugin_collection(plugin_name, plugin_type, spec)
                 new_plugin_names.append(get_plugin_fqcn(namespace, plugin_collection, plugin_name))
-                if plugin_collection != collection:
-                    integration_tests_add_to_deps(collection, plugin_collection)
+                integration_tests_add_to_deps(collection, plugin_collection)
             except LookupError:
                 new_plugin_names.append(plugin_name)
 
@@ -908,8 +909,7 @@ def _rewrite_yaml_mapping_keys(el, namespace, collection, spec):
             try:
                 plugin_collection = get_plugin_collection(el[key], plugin_type, spec)
                 el[key] = get_plugin_fqcn(namespace, plugin_collection, el[key])
-                if plugin_collection != collection:
-                    integration_tests_add_to_deps(collection, plugin_collection)
+                integration_tests_add_to_deps(collection, plugin_collection)
             except LookupError:
                 if '{{' in el[key]:
                     add_manual_check(key, el[key])
@@ -924,8 +924,7 @@ def _rewrite_yaml_mapping_keys(el, namespace, collection, spec):
             try:
                 plugin_collection = get_plugin_collection(plugin_name, 'lookup', spec)
                 el[prefix + get_plugin_fqcn(namespace, plugin_collection, plugin_name)] = el.pop(key)
-                if plugin_collection != collection:
-                    integration_tests_add_to_deps(collection, plugin_collection)
+                integration_tests_add_to_deps(collection, plugin_collection)
             except LookupError:
                 pass
 
@@ -940,8 +939,7 @@ def _rewrite_yaml_mapping_keys(el, namespace, collection, spec):
                     continue
                 new_module_name = get_plugin_fqcn(namespace, coll, key)
                 el[new_module_name] = el.pop(key)
-                if coll != collection:
-                    integration_tests_add_to_deps(collection, coll)
+                integration_tests_add_to_deps(collection, coll)
 
 
 def _rewrite_yaml_mapping_values(el, namespace, collection, spec):
@@ -957,8 +955,7 @@ def _rewrite_yaml_mapping_values(el, namespace, collection, spec):
                         for coll in spec.keys():
                             if item in get_plugins_from_collection(coll, 'modules', spec):
                                 el[key][idx] = get_plugin_fqcn(namespace, coll, el[key][idx])
-                                if collection != coll:
-                                    integration_tests_add_to_deps(collection, coll)
+                                integration_tests_add_to_deps(collection, coll)
 
                     el[key][idx] = _rewrite_yaml_lookup(el[key][idx], namespace, collection, spec)
                     el[key][idx] = _rewrite_yaml_filter(el[key][idx], namespace, collection, spec)
@@ -977,8 +974,7 @@ def _rewrite_yaml_lookup(value, namespace, collection, spec):
         for plugin_name in get_plugins_from_collection(coll, 'lookup', spec):
             if plugin_name in value:
                 value = value.replace(plugin_name, get_plugin_fqcn(namespace, coll, plugin_name))
-                if collection != coll:
-                    integration_tests_add_to_deps(collection, coll)
+                integration_tests_add_to_deps(collection, coll)
 
     return value
 
@@ -997,8 +993,7 @@ def _rewrite_yaml_filter(value, namespace, collection, spec):
             for found_filter in (match[5] for match in FILTER_RE.findall(value)):
                 if found_filter in filters:
                     value = value.replace(found_filter, get_plugin_fqcn(namespace, coll, found_filter))
-                    if collection != coll:
-                        integration_tests_add_to_deps(collection, coll)
+                    integration_tests_add_to_deps(collection, coll)
     return value
 
 
@@ -1016,8 +1011,7 @@ def _rewrite_yaml_test(value, namespace, collection, spec):
             for found_test in (match[5] for match in TEST_RE.findall(value)):
                 if found_test in tests:
                     value = value.replace(found_test, get_plugin_fqcn(namespace, coll, found_test))
-                    if collection != coll:
-                        integration_tests_add_to_deps(collection, coll)
+                    integration_tests_add_to_deps(collection, coll)
     return value
 
 
