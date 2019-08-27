@@ -923,8 +923,7 @@ def _rewrite_yaml_mapping_keys(el, namespace, collection, spec):
             plugin_name = key[prefix_len:]
             try:
                 plugin_collection = get_plugin_collection(plugin_name, 'lookup', spec)
-                el[prefix + get_plugin_fqcn(namespace, plugin_collection, plugin_name)] = el[key]
-                del el[key]
+                el[prefix + get_plugin_fqcn(namespace, plugin_collection, plugin_name)] = el.pop(key)
                 if plugin_collection != collection:
                     integration_tests_add_to_deps(collection, plugin_collection)
             except LookupError:
@@ -940,8 +939,7 @@ def _rewrite_yaml_mapping_keys(el, namespace, collection, spec):
                 if key != module:
                     continue
                 new_module_name = get_plugin_fqcn(namespace, coll, key)
-                el[new_module_name] = el[key]
-                del el[key]
+                el[new_module_name] = el.pop(key)
                 if coll != collection:
                     integration_tests_add_to_deps(collection, coll)
 
