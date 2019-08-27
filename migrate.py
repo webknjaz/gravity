@@ -14,6 +14,7 @@ from string import Template
 
 from logzero import logger
 
+from baron.parser import ParsingError
 import redbaron
 
 
@@ -23,6 +24,10 @@ DEVEL_BRANCH = 'devel'
 VARDIR = os.environ.get('GRAVITY_VAR_DIR', '.cache')
 COLLECTION_NAMESPACE = 'test_migrate_ns'
 PLUGIN_EXCEPTION_PATHS = {'modules': 'lib/ansible/modules', 'module_utils': 'lib/ansible/module_utils', 'lookups': 'lib/ansible/plugins/lookup'}
+
+
+RAW_STR_TMPL = "r'''{str_val}'''"
+STR_TMPL = "'''{str_val}'''"
 
 
 core = {}
@@ -178,35 +183,34 @@ def get_plugin_collection(plugin_name, plugin_type, spec):
     raise LookupError('Could not find "%s" named "%s" in any collection in the spec' % (plugin_type, plugin_name))
 
 
-def rewrite_doc_fragments(plugin_data, collection, spec, args):
-    import ast
-    class DocFragmentFinderVisitor(ast.NodeVisitor):
-        def __init__(self):
-            self.fragments = []
+def rewrite_doc_fragments(mod_fst, collection, spec, namespace):
+    try:
+        doc_val = (
+            mod_fst.
+            find_all('assignment').
+            find('name', value='DOCUMENTATION').
+            parent.
+            value
+        )
+    except AttributeError:
+        raise LookupError('No DOCUMENTATION found')
 
-        def visit_Assign(self, node):
-            if type(node.value) != ast.Str:
-                return
+    doc_str_tmpl = RAW_STR_TMPL if doc_val.type == 'raw_string' else STR_TMPL
+    # Turn `'strng'` into `strng` and  `r'strng'` into `strng`
+    # so that we don't feed a quoted string into the YAML parser:
+    doc_txt = doc_val.to_python()
 
-            for name in node.targets:
-                if getattr(name, 'id', '') == 'DOCUMENTATION':
-                    docs = node.value.s.strip('\n')
-                    docs_parsed = yaml.safe_load(docs)
-                    self.fragments = docs_parsed.get('extends_documentation_fragment', [])
-                    if not isinstance(self.fragments, list):
-                        self.fragments = [self.fragments]
+    docs_parsed = yaml.safe_load(doc_txt.strip('\n'))
 
-    # TODO: use ansible-doc --json instead? plugin loader/docs directly?
-
-    tree = ast.parse(plugin_data)
-    doc_finder = DocFragmentFinderVisitor()
-    doc_finder.visit(tree)
+    fragments = docs_parsed.get('extends_documentation_fragment', [])
+    if not isinstance(fragments, list):
+        fragments = [fragments]
 
     deps = []
-    for fragment in doc_finder.fragments:
+    for fragment in fragments:
+        # some doc_fragments use subsections (e.g. vmware.vcenter_documentation)
+        fragment_name, _dot, _rest = fragment.partition('.')
         try:
-            # some doc_fragments use subsections (e.g. vmware.vcenter_documentation)
-            fragment_name = fragment.split('.')[0]
             fragment_collection = get_plugin_collection(fragment_name, 'doc_fragments', spec)
         except LookupError:
             # plugin not in spec, assuming it stays in core and leaving as is
@@ -217,17 +221,37 @@ def rewrite_doc_fragments(plugin_data, collection, spec, args):
             continue
 
         # TODO what if it's in a different namespace (different spec)? do we care?
-        new_fragment = '%s.%s.%s' % (args.namespace, fragment_collection, fragment)
-        # TODO make sure to replace only in DOCUMENTATION
-        plugin_data = plugin_data.replace(fragment, new_fragment)
+        new_fragment = f'{namespace}.{fragment_collection}.{fragment}'
+
+        # `doc_val` holds a baron representation of the string node
+        # of type 'string' or 'raw_string'. Updating its `.value`
+        # via assigning the new one replaces the node in FST.
+        # Also, in order to generate a string or raw-string literal,
+        # we need to wrap it with a corresponding pair of quotes.
+        # If we don't do this, we'd generate the following Python code
+        # ```
+        # DOCUMENTATION = some string value
+        # ```
+        # instead of the correct
+        # ```
+        # DOCUMENTATION = r'''some string value'''
+        # ```
+        # or
+        # ```
+        # DOCUMENTATION = '''some string value'''
+        # ```
+        # TODO figure out whether this can be improved
+        doc_val.value = doc_str_tmpl.format(
+            str_val=doc_txt.replace(fragment, new_fragment),
+        )
 
         if collection != fragment_collection:
             deps.append(fragment_collection)
 
-    return plugin_data, deps
+    return deps
 
 
-def rewrite_imports(mod_src_text, collection, spec, namespace):
+def rewrite_imports(mod_fst, collection, spec, namespace):
     """Rewrite imports map."""
     plugins_path = ('ansible_collections', namespace, collection, 'plugins')
     import_map = {
@@ -235,14 +259,7 @@ def rewrite_imports(mod_src_text, collection, spec, namespace):
         ('ansible', 'plugins'): plugins_path,
     }
 
-    try:
-        mod_fst = redbaron.RedBaron(mod_src_text)
-    except Exception:
-        logger.error('failed parsing on %s' % mod_src_text)
-        raise
-
-    deps = rewrite_imports_in_fst(mod_fst, import_map, collection, spec)
-    return mod_fst.dumps(), deps
+    return rewrite_imports_in_fst(mod_fst, import_map, collection, spec)
 
 
 def match_import_src(imp_src, import_map):
@@ -317,6 +334,16 @@ def read_text_from_file(path):
 def write_text_into_file(path, text):
     with open(path, 'w') as f:
         return f.write(text)
+
+
+def read_module_txt_n_fst(path):
+    """Parse module source code in form of Full Syntax Tree."""
+    mod_src_text = read_text_from_file(path)
+    try:
+        return mod_src_text, redbaron.RedBaron(mod_src_text)
+    except ParsingError:
+        logger.exception('failed parsing on %s', mod_src_text)
+        raise
 
 
 def resolve_spec(spec, checkoutdir):
@@ -437,20 +464,23 @@ def assemble_collections(spec, args):
                     shutil.copyfile(src, dest)
                     continue
 
-                plugin_data = read_text_from_file(src)
-                plugin_data_new = plugin_data[:]
+                mod_src_text, mod_fst = read_module_txt_n_fst(src)
 
                 # were any lines nullified?
                 #extralines = False
 
-                plugin_data_new, import_dependencies = rewrite_imports(plugin_data_new, collection, spec, args.namespace)
-                plugin_data_new, docs_dependencies = rewrite_doc_fragments(plugin_data_new, collection, spec, args)
+                import_dependencies = rewrite_imports(mod_fst, collection, spec, args.namespace)
+                try:
+                    docs_dependencies = rewrite_doc_fragments(mod_fst, collection, spec, args.namespace)
+                except LookupError as err:
+                    logger.info('%s in %s', err, src)
+                plugin_data_new = mod_fst.dumps()
 
                 # clean too many empty lines
                 #if extralines:
                 #    data = clean_extra_lines(data)
 
-                if plugin_data != plugin_data_new:
+                if mod_src_text != plugin_data_new:
                     for dep in docs_dependencies + import_dependencies:
                         dep_collection = '%s.%s' % (args.namespace, dep)
                         # FIXME hardcoded version
