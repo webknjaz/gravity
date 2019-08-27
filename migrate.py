@@ -521,7 +521,10 @@ def assemble_collections(spec, args):
                 #copy_unit_tests(plugin, collection, spec, args)
 
         # FIXME need to hack PyYAML to preserve formatting (not how much it's possible or how much it is work) or use e.g. ruamel.yaml
-        rewrite_integration_tests(integration_test_dirs, checkout_path, collection_dir, args.namespace, collection, spec, args)
+        try:
+            rewrite_integration_tests(integration_test_dirs, checkout_path, collection_dir, args.namespace, collection, spec, args)
+        except yaml.composer.ComposerError as e:
+            logger.error(e)
 
         global integration_tests_deps
         for dep in integration_tests_deps:
@@ -960,10 +963,11 @@ def _rewrite_yaml_mapping_values(el, namespace, collection, spec):
                             if item in get_plugins_from_collection(coll, 'modules', spec):
                                 el[key][idx] = get_plugin_fqcn(namespace, coll, el[key][idx])
                                 integration_tests_add_to_deps(collection, coll)
-
-                    el[key][idx] = _rewrite_yaml_lookup(el[key][idx], namespace, collection, spec)
-                    el[key][idx] = _rewrite_yaml_filter(el[key][idx], namespace, collection, spec)
-                    el[key][idx] = _rewrite_yaml_test(el[key][idx], namespace, collection, spec)
+                    if isinstance(el[key][idx], str):
+                        # FIXME move to a func
+                        el[key][idx] = _rewrite_yaml_lookup(el[key][idx], namespace, collection, spec)
+                        el[key][idx] = _rewrite_yaml_filter(el[key][idx], namespace, collection, spec)
+                        el[key][idx] = _rewrite_yaml_test(el[key][idx], namespace, collection, spec)
         elif isinstance(value, str):
             el[key] = _rewrite_yaml_lookup(el[key], namespace, collection, spec)
             el[key] = _rewrite_yaml_filter(el[key], namespace, collection, spec)
