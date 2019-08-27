@@ -976,9 +976,10 @@ def _rewrite_yaml_lookup(value, namespace, collection, spec):
 
     for coll in spec.keys():
         for plugin_name in get_plugins_from_collection(coll, 'lookup', spec):
-            if plugin_name in value:
-                value = value.replace(plugin_name, get_plugin_fqcn(namespace, coll, plugin_name))
-                integration_tests_add_to_deps(collection, coll)
+            if plugin_name not in value:
+                continue
+            value = value.replace(plugin_name, get_plugin_fqcn(namespace, coll, plugin_name))
+            integration_tests_add_to_deps(collection, coll)
 
     return value
 
@@ -995,9 +996,11 @@ def _rewrite_yaml_filter(value, namespace, collection, spec):
                 continue
             filters = fm().filters().keys()
             for found_filter in (match[5] for match in FILTER_RE.findall(value)):
-                if found_filter in filters:
-                    value = value.replace(found_filter, get_plugin_fqcn(namespace, coll, found_filter))
-                    integration_tests_add_to_deps(collection, coll)
+                if found_filter not in filters:
+                    continue
+                value = value.replace(found_filter, get_plugin_fqcn(namespace, coll, found_filter))
+                integration_tests_add_to_deps(collection, coll)
+
     return value
 
 
@@ -1013,9 +1016,11 @@ def _rewrite_yaml_test(value, namespace, collection, spec):
                 continue
             tests = tm().tests().keys()
             for found_test in (match[5] for match in TEST_RE.findall(value)):
-                if found_test in tests:
-                    value = value.replace(found_test, get_plugin_fqcn(namespace, coll, found_test))
-                    integration_tests_add_to_deps(collection, coll)
+                if found_test not in tests:
+                    continue
+                value = value.replace(found_test, get_plugin_fqcn(namespace, coll, found_test))
+                integration_tests_add_to_deps(collection, coll)
+
     return value
 
 
