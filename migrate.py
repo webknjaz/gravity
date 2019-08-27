@@ -294,8 +294,7 @@ def rewrite_imports_in_fst(mod_fst, import_map, collection, spec):
 
         if imp_src[1].value == 'module_utils':
             plugin_type = 'module_utils'
-            plugin_name = [imp_src[idx].value for idx in range(token_length, len(imp_src))]
-            plugin_name = '/'.join(plugin_name)
+            plugin_name = '/'.join(t.value for t in imp_src[token_length:])
         elif imp_src[1].value == 'plugins':
             try:
                 plugin_type = imp_src[2].value
