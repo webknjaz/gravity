@@ -522,7 +522,7 @@ def assemble_collections(spec, args):
 
         # FIXME need to hack PyYAML to preserve formatting (not how much it's possible or how much it is work) or use e.g. ruamel.yaml
         try:
-            rewrite_integration_tests(integration_test_dirs, checkout_path, collection_dir, args.namespace, collection, spec, args)
+            rewrite_integration_tests(integration_test_dirs, checkout_path, collection_dir, args.namespace, collection, spec)
         except yaml.composer.ComposerError as e:
             logger.error(e)
 
@@ -749,7 +749,7 @@ def poor_mans_integration_tests_discovery(checkout_dir, plugin_type, plugin_name
     return files
 
 
-def rewrite_integration_tests(test_dirs, checkout_dir, collection_dir, namespace, collection, spec, args):
+def rewrite_integration_tests(test_dirs, checkout_dir, collection_dir, namespace, collection, spec):
     # FIXME move to diff file
     # FIXME module_defaults groups
 
@@ -768,11 +768,15 @@ def rewrite_integration_tests(test_dirs, checkout_dir, collection_dir, namespace
 
                 if ext in ('.py',):
                     # FIXME duplicate code from the 'main' function
-                    plugin_data = read_text_from_file(full_path)
-                    plugin_data_new = plugin_data[:]
+                    mod_src_text, mod_fst = read_module_txt_n_fst(full_path)
 
-                    plugin_data_new, import_dependencies = rewrite_imports(plugin_data_new, collection, spec, namespace)
-                    plugin_data_new, docs_dependencies = rewrite_doc_fragments(plugin_data_new, collection, spec, args)
+                    import_dependencies = rewrite_imports(mod_fst, collection, spec, namespace)
+                    try:
+                        docs_dependencies = rewrite_doc_fragments(mod_fst, collection, spec, namespace)
+                    except LookupError as err:
+                        docs_dependencies = []
+                        logger.info('%s in %s', err, full_path)
+                    plugin_data_new = mod_fst.dumps()
 
                     for dep in docs_dependencies + import_dependencies:
                         integration_tests_add_to_deps(collection, dep)
@@ -905,7 +909,6 @@ def _rewrite_yaml_mapping_keys(el, namespace, collection, spec):
     translate = []
     for key in el.keys():
         if is_reserved_name(key):
-            logger.debug('skipping reserved name ' + key)
             continue
 
         plugin_type = KEYWORD_TO_PLUGIN_MAP.get(key)
