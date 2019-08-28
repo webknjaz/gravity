@@ -325,6 +325,66 @@ def rewrite_imports_in_fst(mod_fst, import_map, collection, spec):
     return deps
 
 
+def copy_unit_tests(checkout_path, collection_dir, plugin_type, plugin, spec):
+    """Find all unit tests and related artifacts for the given plugin.
+
+    Return the copy map.
+    """
+    type_subdir = (
+        plugin_type
+        if plugin_type in ('modules', 'module_utils')
+        else os.path.join('plugins', plugin_type)
+    )
+
+    # Narrow down the search area
+    type_base_subdir = os.path.join(
+        checkout_path, 'test', 'units',
+        type_subdir,
+    )
+
+    # Find all test modules with the same ending as the current plugin
+    plugin_dir, plugin_mod = os.path.split(plugin)
+    matching_test_modules = glob.glob(os.path.join(type_base_subdir, plugin_dir, f'*{plugin_mod}'))
+    if not matching_test_modules:
+        logger.info('No tests matching %s/%s found', plugin_type, plugin)
+        return
+
+    # Figure out what to copy and where
+    copy_map = defaultdict(lambda: defaultdict(set))
+    for td, tm in (os.path.split(p) for p in matching_test_modules):
+        copy_map[td]['files'].add(tm)
+        copy_map[td]['to'] = os.path.join(
+            collection_dir, 'test', 'unit',
+            plugin_type, plugin_dir,
+        )
+        # Add subdirs that may contain related test artifacts/fixtures
+        # Also add important modules like conftest or __init__
+        for path in os.listdir(td):
+            is_dir = os.path.isdir(os.path.join(td, path))
+            if not is_dir and path.startswith('test_'):
+                continue
+            copy_map[td]['dirs' if is_dir else 'files'].add(path)
+
+    # Actually copy tests
+    for test_dir, mapped_tests in copy_map.items():
+        dest = mapped_tests['to']
+        files = mapped_tests['files']
+        dirs = mapped_tests['dirs']
+
+        # Ensure target dir exists
+        os.makedirs(dest, exist_ok=True)
+
+        for f in files:
+            shutil.copy(os.path.join(test_dir, f), dest)
+
+        for d in dirs:
+            shutil.rmtree(os.path.join(dest, d), ignore_errors=True)
+            shutil.copytree(os.path.join(test_dir, d), os.path.join(dest, d))
+
+    logger.info('Unit tests copied for %s/%s', plugin_type, plugin)
+    return copy_map
+
+
 def read_text_from_file(path):
     with open(path, 'r') as f:
         return f.read()
@@ -490,7 +550,10 @@ def assemble_collections(spec, args):
                 write_text_into_file(dest, plugin_data_new)
 
                 # process unit tests TODO: sanity? , integration?
-                #copy_unit_tests(plugin, collection, spec, args)
+                copy_unit_tests(
+                    checkout_path, collection_dir,
+                    plugin_type, plugin, spec,
+                )
 
         # write collection metadata
         write_yaml_into_file_as_is(
