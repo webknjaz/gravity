@@ -500,6 +500,7 @@ def assemble_collections(spec, args):
                 try:
                     docs_dependencies = rewrite_doc_fragments(mod_fst, collection, spec, args.namespace)
                 except LookupError as err:
+                    docs_dependencies = []
                     logger.info('%s in %s', err, src)
                 plugin_data_new = mod_fst.dumps()
 
