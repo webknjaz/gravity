@@ -248,7 +248,7 @@ def rewrite_doc_fragments(mod_fst, collection, spec, namespace):
             continue
 
         # TODO what if it's in a different namespace (different spec)? do we care?
-        new_fragment = f'{namespace}.{fragment_collection}.{fragment}'
+        new_fragment = get_plugin_fqcn(namespace, fragment_collection, fragment)
 
         # `doc_val` holds a baron representation of the string node
         # of type 'string' or 'raw_string'. Updating its `.value`
