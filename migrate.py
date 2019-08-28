@@ -1000,6 +1000,7 @@ def _rewrite_yaml_filter(value, namespace, collection, spec):
         for filter_plugin_name in get_plugins_from_collection(coll, 'filter', spec):
             imported_module = import_module('ansible.plugins.filter.' + filter_plugin_name)
             fm = getattr(imported_module, 'FilterModule', None)
+            # FIXME import once
             if fm is None:
                 continue
             filters = fm().filters().keys()
@@ -1020,6 +1021,7 @@ def _rewrite_yaml_test(value, namespace, collection, spec):
         for test_plugin_name in get_plugins_from_collection(coll, 'test', spec):
             imported_module = import_module('ansible.plugins.test.' + test_plugin_name)
             tm = getattr(imported_module, 'TestModule', None)
+            # FIXME import once
             if tm is None:
                 continue
             tests = tm().tests().keys()
