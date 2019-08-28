@@ -543,7 +543,12 @@ def assemble_collections(spec, args):
                     raise Exception('Spec specifies "%s" but file "%s" is not found in checkout' % (plugin, src))
 
                 if os.path.islink(src):
-                    shutil.copyfile(src, dest, follow_symlinks=False)
+                    try:
+                        shutil.copyfile(src, dest, follow_symlinks=False)
+                    except FileExistsError as e:
+                        os.remove(dest)
+                        # NOTE not atomic but should not matter in our script
+                        shutil.copyfile(src, dest, follow_symlinks=False)
                     continue
                 elif not src.endswith('.py'):
                     # its not all python files, copy and go to next
