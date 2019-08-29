@@ -122,7 +122,7 @@ def resolve_spec(spec, checkoutdir):
                         if ptype != 'module_utils' and fname.endswith('__init__.py') or not os.path.isfile(fname):
                             continue
                         fname = fname.replace(replace_base, '')
-                        spec[coll][ptype].append(fname)
+                        spec[coll][ptype].insert(0, fname)
 
                     # clean out glob entry
                     spec[coll][ptype].remove(entry)
