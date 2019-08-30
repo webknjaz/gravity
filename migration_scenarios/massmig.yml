@@ -11,12 +11,25 @@ _core:
     - minimal.py
     - oneline.py
     - tree.py
+    connection:
+    - ssh.py
+    - local.py
     doc_fragments:
     - default_callback.py
     - files.py
     - shell_common.py
     - url.py
     - validate.py
+    lookups:
+    - fileglob.py
+    - first_found.py
+    - inventory_hostnames.py
+    - items.py
+    - link.py
+    - nested.py
+    - sequence.py
+    - subelements.py
+    - together.py
     module_utils:
     - _text.py
     - ansible_release.py
@@ -32,6 +45,7 @@ _core:
     - facts/utils.py
     - json_utils.py
     - parsing/convert_bool.py
+    - service.py
     - six.py
     - six/*
     - six/moves/*
@@ -57,6 +71,10 @@ bigip:
     terminal:
     - bigip.py
 checkpoint:
+    httpapi:
+    - checkpoint.py
+    doc_fragments:
+    - checkpoint_*.py
     modules:
     - network/checkpoint/*
     module_utils:
@@ -244,7 +262,6 @@ community:
     - auth_basic.py
     - avi.py
     - ce.py
-    - checkpoint_*.py
     - cloudscale.py
     - cnos.py
     - decrypt.py
@@ -402,24 +419,19 @@ community:
     - cloud/cloudscale/*
     - cloud/cloudstack/*
     - cloud/digital_ocean/*
-    - cloud/dimensiondata/dimensiondata_network.py
-    - cloud/dimensiondata/dimensiondata_vlan.py
+    - cloud/dimensiondata/*
     - cloud/docker/*
     - cloud/hcloud/*
     - cloud/heroku/heroku_collaborator.py
     - cloud/huawei/hwc_network_vpc.py
     - cloud/huawei/hwc_smn_topic.py
     - cloud/kubevirt/*
-    - cloud/linode/linode.py
-    - cloud/linode/linode_v4.py
-    - cloud/lxc/lxc_container.py
-    - cloud/lxd/lxd_container.py
-    - cloud/lxd/lxd_profile.py
+    - cloud/linode/*
+    - cloud/lx?/*
     - cloud/memset/*
     - cloud/misc/*
     - cloud/oneandone/*
-    - cloud/online/online_server_facts.py
-    - cloud/online/online_user_facts.py
+    - cloud/online/*
     - cloud/opennebula/*
     - cloud/openstack/*
     - cloud/oracle/oci_vcn.py
@@ -428,36 +440,18 @@ community:
     - cloud/ovirt/*
     - cloud/packet/packet_device.py
     - cloud/packet/packet_sshkey.py
-    - cloud/podman/podman_image.py
-    - cloud/podman/podman_image_info.py
+    - cloud/podman/*
     - cloud/profitbricks/*
     - cloud/pubnub/pubnub_blocks.py
     - cloud/rackspace/*
     - cloud/scaleway/*
-    - cloud/smartos/imgadm.py
-    - cloud/smartos/nictagadm.py
-    - cloud/smartos/smartos_image_facts.py
-    - cloud/smartos/vmadm.py
+    - cloud/smartos/*
     - cloud/softlayer/sl_vm.py
     - cloud/spotinst/spotinst_aws_elastigroup.py
-    - cloud/univention/udm_dns_record.py
-    - cloud/univention/udm_dns_zone.py
-    - cloud/univention/udm_group.py
-    - cloud/univention/udm_share.py
-    - cloud/univention/udm_user.py
-    - cloud/webfaction/webfaction_app.py
-    - cloud/webfaction/webfaction_db.py
-    - cloud/webfaction/webfaction_domain.py
-    - cloud/webfaction/webfaction_mailbox.py
-    - cloud/webfaction/webfaction_site.py
-    - cloud/xenserver/_xenserver_guest_facts.py
-    - cloud/xenserver/xenserver_guest.py
-    - cloud/xenserver/xenserver_guest_info.py
-    - cloud/xenserver/xenserver_guest_powerstate.py
-    - clustering/consul.py
-    - clustering/consul_acl.py
-    - clustering/consul_kv.py
-    - clustering/consul_session.py
+    - cloud/univention/*
+    - cloud/webfaction/*
+    - cloud/xenserver/*
+    - clustering/consul*
     - clustering/etcd3.py
     - clustering/k8s/*
     - clustering/openshift/*
@@ -492,7 +486,8 @@ community:
     - files/xml.py
     - identity/ipa/*
     - identity/keycloak/*
-    - identity/onepassword_facts.py
+    - identity/_onepassword_facts.py
+    - identity/onepassword_info.py
     - identity/opendj/opendj_backendprop.py
     - messaging/rabbitmq/*
     - monitoring/airbrake_deployment.py
@@ -553,8 +548,6 @@ community:
     - network/bigswitch/bcf_switch.py
     - network/bigswitch/bigmon_chain.py
     - network/bigswitch/bigmon_policy.py
-    - network/checkpoint/cp_network.py
-    - network/checkpoint/cp_publish.py
     - network/citrix/_netscaler.py
     - network/cloudengine/*
     - network/cnos/*
@@ -846,13 +839,15 @@ community:
 network:
     become:
     - enable.py
+    connection:
+    - network_cli.py
+    - httpapi.py
     doc_fragments:
     - aireos.py
     - aruba.py
     - asa.py
     - network_agnostic.py
     httpapi:
-    - checkpoint.py
     - exos.py
     - fortimanager.py
     - fortios.py
@@ -926,10 +921,11 @@ unix:
     - jail.py
     - zone.py
     lookup:
-    - shelvefile.py
-    - keyring.py
+    - alternatives.py
     - dig.py
     - dnstxt.py
+    - keyring.py
+    - shelvefile.py
     modules:
     - files/acl.py
     - files/assemble.py
@@ -974,7 +970,11 @@ unix:
     - system/ufw.py
     - system/xfs_quota.py
     module_utils:
+    - compat.py
+    - distro.py
     - firewalld.py
+    - ismount.py
+    - redhat.py
     shell:
     - csh.py
     - fish.py
