@@ -770,7 +770,7 @@ def rewrite_integration_tests(test_dirs, checkout_dir, collection_dir, namespace
                     rewrite_yaml(full_path, dest, namespace, collection, spec)
                 elif ext in ('.sh',):
                     rewrite_sh(full_path, dest, namespace, collection, spec)
-                elif ext in ('.cfg',):
+                elif filename == 'ansible.cfg':
                     rewrite_ini(full_path, dest, namespace, collection, spec)
                 else:
                     shutil.copy2(full_path, dest)
