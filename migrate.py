@@ -330,11 +330,16 @@ def copy_unit_tests(checkout_path, collection_dir, plugin_type, plugin, spec):
         else os.path.join('plugins', plugin_type)
     )
 
-    # Narrow down the search area
-    type_base_subdir = os.path.join(
+    unit_tests_root = os.path.join(
         checkout_path, 'test', 'units',
-        type_subdir,
     )
+
+    collection_unit_tests_root = os.path.join(
+        collection_dir, 'tests', 'unit',
+    )
+
+    # Narrow down the search area
+    type_base_subdir = os.path.join(unit_tests_root, type_subdir)
 
     # Find all test modules with the same ending as the current plugin
     plugin_dir, plugin_mod = os.path.split(plugin)
@@ -345,10 +350,18 @@ def copy_unit_tests(checkout_path, collection_dir, plugin_type, plugin, spec):
 
     # Figure out what to copy and where
     copy_map = defaultdict(lambda: defaultdict(set))
+
+    # Inject unit test helper packages
+    copy_map[unit_tests_root]['to'] = collection_unit_tests_root
+
+    for hd in {'compat', 'mock'}:
+        copy_map[unit_tests_root]['dirs'].add(hd)
+
+    # Add test modules along with related artifacts
     for td, tm in (os.path.split(p) for p in matching_test_modules):
         copy_map[td]['files'].add(tm)
         copy_map[td]['to'] = os.path.join(
-            collection_dir, 'test', 'unit',
+            collection_unit_tests_root,
             plugin_type, plugin_dir,
         )
         # Add subdirs that may contain related test artifacts/fixtures
