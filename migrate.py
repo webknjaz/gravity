@@ -5,6 +5,7 @@
 import argparse
 import configparser
 import glob
+import itertools
 import os
 import re
 import shutil
@@ -231,9 +232,12 @@ def rewrite_doc_fragments(mod_fst, collection, spec, namespace):
 def rewrite_imports(mod_fst, collection, spec, namespace):
     """Rewrite imports map."""
     plugins_path = ('ansible_collections', namespace, collection, 'plugins')
+    tests_path = ('ansible_collections', namespace, collection, 'tests')
+    unit_tests_path = tests_path + ('unit', )
     import_map = {
         ('ansible', 'module_utils'): plugins_path + ('module_utils', ),
         ('ansible', 'plugins'): plugins_path,
+        ('units', ): unit_tests_path,
     }
 
     return rewrite_imports_in_fst(mod_fst, import_map, collection, spec)
@@ -269,7 +273,10 @@ def rewrite_imports_in_fst(mod_fst, import_map, collection, spec):
         if len(imp.find_all('name_as_name', value='g:*loader*')) > 0:
             continue  # Skip imports of ansible.plugin.loader.py
 
-        if imp_src[1].value == 'module_utils':
+        if imp_src[0].value == 'units':
+            imp_src[:token_length] = exchange  # replace the import
+            continue
+        elif imp_src[1].value == 'module_utils':
             plugin_type = 'module_utils'
             plugin_name = '/'.join(t.value for t in imp_src[token_length:])
             if not plugin_name:
@@ -319,6 +326,17 @@ def read_module_txt_n_fst(path):
         logger.exception('failed parsing on %s', mod_src_text)
         raise
 
+
+def inject_init_into_tree(target_dir):
+    for initpath in (
+            os.path.join(dp, '__init__.py')
+            for dp, dn, fn in os.walk(target_dir)
+            if '__init__.py' not in fn
+            # and any(f.endwith('.py') for f in fn)
+    ):
+        write_text_into_file(initpath, '')
+
+
 def copy_unit_tests(checkout_path, collection_dir, plugin_type, plugin, spec):
     """Find all unit tests and related artifacts for the given plugin.
 
@@ -356,6 +374,9 @@ def copy_unit_tests(checkout_path, collection_dir, plugin_type, plugin, spec):
 
     for hd in {'compat', 'mock'}:
         copy_map[unit_tests_root]['dirs'].add(hd)
+
+    copy_map[os.path.join(unit_tests_root, 'modules')]['to'] = os.path.join(collection_unit_tests_root, 'modules')
+    copy_map[os.path.join(unit_tests_root, 'modules')]['files'].add('utils.py')
 
     # Add test modules along with related artifacts
     for td, tm in (os.path.split(p) for p in matching_test_modules):
@@ -551,6 +572,16 @@ def assemble_collections(spec, args):
                         checkout_path, collection_dir,
                         plugin_type, plugin, spec,
                     )
+                    inject_init_into_tree(
+                        os.path.join(collection_dir, 'tests', 'unit'),
+                    )
+                    for file_path in itertools.chain.from_iterable(
+                            (os.path.join(dp, f) for f in fn if f.endswith('.py'))
+                            for dp, dn, fn in os.walk(os.path.join(collection_dir, 'tests', 'unit'))
+                    ):
+                        _unit_test_module_src_text, unit_test_module_fst = read_module_txt_n_fst(file_path)
+                        import_dependencies += rewrite_imports(unit_test_module_fst, collection, spec, namespace)
+                        write_text_into_file(file_path, unit_test_module_fst.dumps())
 
             # FIXME need to hack PyYAML to preserve formatting (not how much it's possible or how much it is work) or use e.g. ruamel.yaml
             try:
