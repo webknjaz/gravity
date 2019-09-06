@@ -474,13 +474,39 @@ def assemble_collections(spec, args):
                         raise Exception('Spec specifies "%s" but file "%s" is not found in checkout' % (plugin, src))
 
                     if os.path.islink(src):
-                        try:
-                            shutil.copyfile(src, dest, follow_symlinks=False)
-                        except FileExistsError as e:
+                        real_src = os.readlink(src)
+
+                        # remove destination if it already exists
+                        if os.path.exists(dest):
+                            # NOTE: not atomic but should not matter in our script
+                            logger.warning('Removed "%s" as it is target for symlink of "%s"' % (dest, src))
                             os.remove(dest)
-                            # NOTE not atomic but should not matter in our script
+
+                        if real_src.startswith('../'):
+                            target = real_src[3:]
+                            found = False
+                            for k in spec[namespace][collection][plugin_type]:
+                                if k.endswith(target):
+                                    found = True
+                                    break
+
+                            if found:
+                                if plugin_type == 'module_utils':
+                                    target = real_src
+                                else:
+                                    target = os.path.basename(real_src)
+                                ret = os.getcwd()
+                                os.chdir(os.path.dirname(dest))
+                                os.symlink(os.path.basename(target), os.path.basename(dest))
+                                os.chdir(ret)
+                            else:
+                                raise Exception('Found symlink "%s" to target "%s" that is not in same collection.' % (src, target))
+                        else:
                             shutil.copyfile(src, dest, follow_symlinks=False)
+
+                        # dont rewrite symlinks, original file should already be handled
                         continue
+
                     elif not src.endswith('.py'):
                         # its not all python files, copy and go to next
                         # TODO: handle powershell import rewrites
