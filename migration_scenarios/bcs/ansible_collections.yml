@@ -53,14 +53,6 @@ _core:
     - urls.py
     shell:
     - sh.py
-aci:
-    doc_fragments:
-    - aci.py
-    - mso.py
-    modules:
-    - network/aci/*
-    module_utils:
-    - network/aci/*
 bigip:
     doc_fragments:
     - f5.py

@@ -111,30 +111,32 @@ def load_spec_file(spec_file):
 def resolve_spec(spec, checkoutdir):
 
     # TODO: add negation? entry: x/* \n entry: !x/base.py
-    for coll in spec.keys():
-        for ptype in spec[coll].keys():
-            plugin_base = os.path.join(checkoutdir, PLUGIN_EXCEPTION_PATHS.get(ptype, os.path.join('lib', 'ansible', 'plugins', ptype)))
-            replace_base = '%s/' % plugin_base
-            for entry in spec[coll][ptype]:
-                if r'*' in entry or r'?' in entry:
-                    files = glob.glob(os.path.join(plugin_base, entry))
-                    for fname in files:
-                        if ptype != 'module_utils' and fname.endswith('__init__.py') or not os.path.isfile(fname):
-                            continue
-                        fname = fname.replace(replace_base, '')
-                        spec[coll][ptype].insert(0, fname)
+    for ns in spec.keys():
+        for coll in spec[ns].keys():
+            for ptype in spec[ns][coll].keys():
+                plugin_base = os.path.join(checkoutdir, PLUGIN_EXCEPTION_PATHS.get(ptype, os.path.join('lib', 'ansible', 'plugins', ptype)))
+                replace_base = '%s/' % plugin_base
+                for entry in spec[ns][coll][ptype]:
+                    if r'*' in entry or r'?' in entry:
+                        files = glob.glob(os.path.join(plugin_base, entry))
+                        for fname in files:
+                            if ptype != 'module_utils' and fname.endswith('__init__.py') or not os.path.isfile(fname):
+                                continue
+                            fname = fname.replace(replace_base, '')
+                            spec[ns][coll][ptype].insert(0, fname)
 
-                    # clean out glob entry
-                    spec[coll][ptype].remove(entry)
+                        # clean out glob entry
+                        spec[ns][coll][ptype].remove(entry)
 
 
 # ===== GET_PLUGINS utils =====
 def get_plugin_collection(plugin_name, plugin_type, spec):
-    for collection in spec.keys():
-        if spec[collection]: # avoid empty collections
-            plugins = spec[collection].get(plugin_type, [])
-            if plugin_name + '.py' in plugins:
-                return collection
+    for ns in spec.keys():
+        for collection in spec[ns].keys():
+            if spec[ns][collection]: # avoid empty collections
+                plugins = spec[ns][collection].get(plugin_type, [])
+                if plugin_name + '.py' in plugins:
+                    return collection
 
     # keep info
     plugin_name = plugin_name.replace('/', '.')
@@ -144,9 +146,10 @@ def get_plugin_collection(plugin_name, plugin_type, spec):
     raise LookupError('Could not find "%s" named "%s" in any collection in the spec' % (plugin_type, plugin_name))
 
 
-def get_plugins_from_collection(collection, plugin_type, spec):
-    assert collection in spec
-    return [plugin.rsplit('/')[-1][:-3] for plugin in spec[collection].get(plugin_type, [])]
+def get_plugins_from_collection(ns, collection, plugin_type, spec):
+    assert ns in spec
+    assert collection in spec[ns]
+    return [plugin.rsplit('/')[-1][:-3] for plugin in spec[ns][collection].get(plugin_type, [])]
 
 
 def get_plugin_fqcn(namespace, collection, plugin_name):
@@ -187,9 +190,12 @@ def rewrite_doc_fragments(mod_fst, collection, spec, namespace):
             # plugin not in spec, assuming it stays in core and leaving as is
             continue
 
-        if fragment_collection.startswith('_'):
+        if fragment_collection == '_core':
             # skip rewrite
             continue
+
+        if fragment_collection.startswith('_'):
+            fragment_collection = fragment_collection[1:]
 
         # TODO what if it's in a different namespace (different spec)? do we care?
         new_fragment = get_plugin_fqcn(namespace, fragment_collection, fragment)
@@ -289,9 +295,12 @@ def rewrite_imports_in_fst(mod_fst, import_map, collection, spec):
             # plugin not in spec, assuming it stays in core and skipping
             continue
 
-        if plugin_collection.startswith('_'):
+        if plugin_collection == '_core':
             # skip rewrite
             continue
+
+        if plugin_collection.startswith('_'):
+            plugin_collection = plugin_collection[1:]
 
         imp_src[:token_length] = exchange  # replace the import
         if plugin_collection != collection:
@@ -379,8 +388,10 @@ def assemble_collections(spec, args):
     meta_dir = os.path.join(args.vardir, 'meta')
     integration_test_dirs = []
 
+    # expand globs so we deal with specific paths
     resolve_spec(spec, checkout_path)
 
+    # ensure we always use a clean copy
     if args.refresh and os.path.exists(collections_base_dir):
         shutil.rmtree(collections_base_dir)
 
@@ -389,150 +400,151 @@ def assemble_collections(spec, args):
 
     seen = {}
     migrated_to_collection = defaultdict(set)
-    for collection in spec.keys():
+    for namespace in spec.keys():
+        for collection in spec[namespace].keys():
 
-        if collection.startswith('_'):
-            # these are placeholder collections
-            continue
+            if collection.startswith('_'):
+                # these are info only collections
+                continue
 
-        collection_dir = os.path.join(collections_base_dir, 'ansible_collections', args.namespace, collection)
+            collection_dir = os.path.join(collections_base_dir, 'ansible_collections', namespace, collection)
 
-        if args.refresh and os.path.exists(collection_dir):
-            shutil.rmtree(collection_dir)
+            if args.refresh and os.path.exists(collection_dir):
+                shutil.rmtree(collection_dir)
 
-        if not os.path.exists(collection_dir):
-            os.makedirs(collection_dir)
+            if not os.path.exists(collection_dir):
+                os.makedirs(collection_dir)
 
-        # create the data for galaxy.yml
-        galaxy_metadata = {
-            'namespace': args.namespace,
-            'name': collection,
-            'version': '1.0.0',  # TODO: add to spec, args?
-            'readme': None,
-            'authors': None,
-            'description': None,
-            'license': None,
-            'license_file': None,
-            'tags': None,
-            'dependencies': {},
-            'repository': None,
-            'documentation': None,
-            'homepage': None,
-            'issues': None
-        }
+            # create the data for galaxy.yml
+            galaxy_metadata = {
+                'namespace': namespace,
+                'name': collection,
+                'version': '1.0.0',  # TODO: add to spec, args?
+                'readme': None,
+                'authors': None,
+                'description': None,
+                'license': None,
+                'license_file': None,
+                'tags': None,
+                'dependencies': {},
+                'repository': None,
+                'documentation': None,
+                'homepage': None,
+                'issues': None
+            }
 
-        for plugin_type in spec[collection].keys():
+            for plugin_type in spec[namespace][collection].keys():
 
-            # get right plugin path
-            if plugin_type not in PLUGIN_EXCEPTION_PATHS:
-                src_plugin_base = os.path.join('lib', 'ansible', 'plugins', plugin_type)
-            else:
-                src_plugin_base = PLUGIN_EXCEPTION_PATHS[plugin_type]
-
-            # ensure destinations exist
-            dest_plugin_base = os.path.join(collection_dir, 'plugins', plugin_type)
-            if not os.path.exists(dest_plugin_base):
-                os.makedirs(dest_plugin_base)
-                with open(os.path.join(dest_plugin_base, '__init__.py'), 'w') as f:
-                    f.write('')
-
-            # process each plugin
-            for plugin in spec[collection][plugin_type]:
-                plugin_sig = '%s/%s' % (plugin_type, plugin)
-                if plugin_sig in seen:
-                    raise ValueError(
-                        'Each plugin needs to be assigned to one collection '
-                        f'only. {plugin_sig} has already been processed as a '
-                        f'part of `{seen[plugin_sig]}` collection.'
-                    )
-                seen[plugin_sig] = collection
-
-                # TODO: currently requires 'full name of file', but should work w/o extension?
-                src = os.path.join(checkout_path, src_plugin_base, plugin)
-                migrated_to_collection[collection].add(os.path.join(src_plugin_base, plugin))
-                if (args.preserve_module_subdirs and plugin_type == 'modules') or plugin_type == 'module_utils':
-                    dest = os.path.join(dest_plugin_base, plugin)
-                    dest_dir = os.path.dirname(dest)
-                    if not os.path.exists(dest_dir):
-                        os.makedirs(dest_dir)
+                # get right plugin path
+                if plugin_type not in PLUGIN_EXCEPTION_PATHS:
+                    src_plugin_base = os.path.join('lib', 'ansible', 'plugins', plugin_type)
                 else:
-                    dest = os.path.join(dest_plugin_base, os.path.basename(plugin))
+                    src_plugin_base = PLUGIN_EXCEPTION_PATHS[plugin_type]
 
-                if not os.path.exists(src):
-                    raise Exception('Spec specifies "%s" but file "%s" is not found in checkout' % (plugin, src))
+                # ensure destinations exist
+                dest_plugin_base = os.path.join(collection_dir, 'plugins', plugin_type)
+                if not os.path.exists(dest_plugin_base):
+                    os.makedirs(dest_plugin_base)
+                    with open(os.path.join(dest_plugin_base, '__init__.py'), 'w') as f:
+                        f.write('')
 
-                if os.path.islink(src):
+                # process each plugin
+                for plugin in spec[namespace][collection][plugin_type]:
+                    plugin_sig = '%s/%s' % (plugin_type, plugin)
+                    if plugin_sig in seen:
+                        raise ValueError(
+                            'Each plugin needs to be assigned to one collection '
+                            f'only. {plugin_sig} has already been processed as a '
+                            f'part of `{seen[plugin_sig]}` collection.'
+                        )
+                    seen[plugin_sig] = collection
+
+                    # TODO: currently requires 'full name of file', but should work w/o extension?
+                    src = os.path.join(checkout_path, src_plugin_base, plugin)
+                    migrated_to_collection[collection].add(os.path.join(src_plugin_base, plugin))
+                    if (args.preserve_module_subdirs and plugin_type == 'modules') or plugin_type == 'module_utils':
+                        dest = os.path.join(dest_plugin_base, plugin)
+                        dest_dir = os.path.dirname(dest)
+                        if not os.path.exists(dest_dir):
+                            os.makedirs(dest_dir)
+                    else:
+                        dest = os.path.join(dest_plugin_base, os.path.basename(plugin))
+
+                    if not os.path.exists(src):
+                        raise Exception('Spec specifies "%s" but file "%s" is not found in checkout' % (plugin, src))
+
+                    if os.path.islink(src):
+                        try:
+                            shutil.copyfile(src, dest, follow_symlinks=False)
+                        except FileExistsError as e:
+                            os.remove(dest)
+                            # NOTE not atomic but should not matter in our script
+                            shutil.copyfile(src, dest, follow_symlinks=False)
+                        continue
+                    elif not src.endswith('.py'):
+                        # its not all python files, copy and go to next
+                        # TODO: handle powershell import rewrites
+                        shutil.copyfile(src, dest)
+                        continue
+
+                    mod_src_text, mod_fst = read_module_txt_n_fst(src)
+
+                    import_dependencies = rewrite_imports(mod_fst, collection, spec, namespace)
                     try:
-                        shutil.copyfile(src, dest, follow_symlinks=False)
-                    except FileExistsError as e:
-                        os.remove(dest)
-                        # NOTE not atomic but should not matter in our script
-                        shutil.copyfile(src, dest, follow_symlinks=False)
-                    continue
-                elif not src.endswith('.py'):
-                    # its not all python files, copy and go to next
-                    # TODO: handle powershell import rewrites
-                    shutil.copyfile(src, dest)
-                    continue
+                        docs_dependencies = rewrite_doc_fragments(mod_fst, collection, spec, namespace)
+                    except LookupError as err:
+                        docs_dependencies = []
+                        logger.info('%s in %s', err, src)
+                    plugin_data_new = mod_fst.dumps()
 
-                mod_src_text, mod_fst = read_module_txt_n_fst(src)
+                    if mod_src_text != plugin_data_new:
+                        for dep in docs_dependencies + import_dependencies:
+                            dep_collection = '%s.%s' % (namespace, dep)
+                            # FIXME hardcoded version
+                            galaxy_metadata['dependencies'][dep_collection] = '>=1.0'
+                        logger.info('rewriting plugin references in %s' % dest)
 
-                import_dependencies = rewrite_imports(mod_fst, collection, spec, args.namespace)
-                try:
-                    docs_dependencies = rewrite_doc_fragments(mod_fst, collection, spec, args.namespace)
-                except LookupError as err:
-                    docs_dependencies = []
-                    logger.info('%s in %s', err, src)
-                plugin_data_new = mod_fst.dumps()
+                    write_text_into_file(dest, plugin_data_new)
 
-                if mod_src_text != plugin_data_new:
-                    for dep in docs_dependencies + import_dependencies:
-                        dep_collection = '%s.%s' % (args.namespace, dep)
-                        # FIXME hardcoded version
-                        galaxy_metadata['dependencies'][dep_collection] = '>=1.0'
-                    logger.info('rewriting plugin references in %s' % dest)
+                    integration_test_dirs.extend(poor_mans_integration_tests_discovery(checkout_path, plugin_type, plugin))
+                    # process unit tests TODO: sanity? , integration?
+                    copy_unit_tests(
+                        checkout_path, collection_dir,
+                        plugin_type, plugin, spec,
+                    )
 
-                write_text_into_file(dest, plugin_data_new)
+            # FIXME need to hack PyYAML to preserve formatting (not how much it's possible or how much it is work) or use e.g. ruamel.yaml
+            try:
+                rewrite_integration_tests(integration_test_dirs, checkout_path, collection_dir, namespace, collection, spec)
+            except yaml.composer.ComposerError as e:
+                logger.error(e)
 
-                integration_test_dirs.extend(poor_mans_integration_tests_discovery(checkout_path, plugin_type, plugin))
-                # process unit tests TODO: sanity? , integration?
-                copy_unit_tests(
-                    checkout_path, collection_dir,
-                    plugin_type, plugin, spec,
-                )
+            global integration_tests_deps
+            for dep in integration_tests_deps:
+                dep_collection = '%s.%s' % (namespace, dep)
+                # FIXME hardcoded version
+                galaxy_metadata['dependencies'][dep_collection] = '>=1.0'
 
-        # FIXME need to hack PyYAML to preserve formatting (not how much it's possible or how much it is work) or use e.g. ruamel.yaml
-        try:
-            rewrite_integration_tests(integration_test_dirs, checkout_path, collection_dir, args.namespace, collection, spec)
-        except yaml.composer.ComposerError as e:
-            logger.error(e)
+            integration_test_dirs = []
+            integration_tests_deps = set()
 
-        global integration_tests_deps
-        for dep in integration_tests_deps:
-            dep_collection = '%s.%s' % (args.namespace, dep)
-            # FIXME hardcoded version
-            galaxy_metadata['dependencies'][dep_collection] = '>=1.0'
+            # write collection metadata
+            write_yaml_into_file_as_is(
+                os.path.join(collection_dir, 'galaxy.yml'),
+                galaxy_metadata,
+            )
 
-        integration_test_dirs = []
-        integration_tests_deps = set()
+            # init git repo
+            subprocess.check_call(('git', 'init'), cwd=collection_dir)
+            subprocess.check_call(('git', 'add', '.'), cwd=collection_dir)
+            subprocess.check_call(
+                ('git', 'commit', '-m', 'Initial commit', '--allow-empty'),
+                cwd=collection_dir,
+            )
 
-        # write collection metadata
-        write_yaml_into_file_as_is(
-            os.path.join(collection_dir, 'galaxy.yml'),
-            galaxy_metadata,
-        )
-
-        # init git repo
-        subprocess.check_call(('git', 'init'), cwd=collection_dir)
-        subprocess.check_call(('git', 'add', '.'), cwd=collection_dir)
-        subprocess.check_call(
-            ('git', 'commit', '-m', 'Initial commit', '--allow-empty'),
-            cwd=collection_dir,
-        )
-
-        mark_moved_resources(
-            checkout_path, collection, migrated_to_collection[collection],
-        )
+            mark_moved_resources(
+                checkout_path, collection, migrated_to_collection[collection],
+            )
 
 
 def mark_moved_resources(checkout_dir, collection, migrated_to_collection):
@@ -590,7 +602,7 @@ def mark_moved_resources(checkout_dir, collection, migrated_to_collection):
     )
 
 
-def copy_tests(plugin, coll, spec, args):
+def copy_tests(plugin, namespace, coll, spec, args):
 
     # TODO: tests might also require rewriting imports, docfragments and even play/tasks,
     #  why i made functions above from preexisting code
@@ -602,7 +614,7 @@ def copy_tests(plugin, coll, spec, args):
     dst = os.path.join(plugin, 'test', 'unit')
     if not os.path.exists(dst):
         os.makedirs(dst)
-    for uf in spec['units']:  # TODO: should we rely on spec or 'autofind' matching units of same name/type?
+    for uf in spec[namespace]['units']:  # TODO: should we rely on spec or 'autofind' matching units of same name/type?
         fuf = os.path.join(args.vardir, 'test', 'units', uf)
         if os.path.isdir(fuf):
             #import epdb; epdb.st()
@@ -686,7 +698,7 @@ def copy_tests(plugin, coll, spec, args):
                         msrc = msrc.replace('.ps1', '')
                         msrc = msrc.replace('.ps2', '')
 
-                        mdst = '%s.%s.%s' % (args.namespace, coll, msrc)
+                        mdst = '%s.%s.%s' % (namespace, coll, msrc)
 
                         if msrc not in ydata or mdst in ydata:
                             continue
@@ -792,8 +804,8 @@ def rewrite_sh(full_path, dest, namespace, collection, spec):
     for key, plugin_type in sh_key_map.items():
         if not contents.find(key):
             continue
-        for coll in spec.keys():
-            plugins = get_plugins_from_collection(coll, plugin_type, spec)
+        for coll in spec[namespace].keys():
+            plugins = get_plugins_from_collection(namespace, coll, plugin_type, spec)
             for plugin_name in plugins:
                 if not contents.find(plugin_name):
                     continue
@@ -916,9 +928,9 @@ def _rewrite_yaml_mapping_keys(el, namespace, collection, spec):
             except LookupError:
                 pass
 
-        for coll in spec.keys():
+        for coll in spec[namespace].keys():
             try:
-                modules_in_collection = get_plugins_from_collection(coll, 'modules', spec)
+                modules_in_collection = get_plugins_from_collection(namespace, coll, 'modules', spec)
             except LookupError:
                 continue
 
@@ -943,8 +955,8 @@ def _rewrite_yaml_mapping_values(el, namespace, collection, spec):
                     _rewrite_yaml_mapping(el[key][idx], namespace, collection, spec)
                 else:
                     if key == 'module_blacklist':
-                        for coll in spec.keys():
-                            if item in get_plugins_from_collection(coll, 'modules', spec):
+                        for coll in spec[namespace].keys():
+                            if item in get_plugins_from_collection(namespace, coll, 'modules', spec):
                                 el[key][idx] = get_plugin_fqcn(namespace, coll, el[key][idx])
                                 integration_tests_add_to_deps(collection, coll)
                     if isinstance(el[key][idx], str):
@@ -962,8 +974,8 @@ def _rewrite_yaml_lookup(value, namespace, collection, spec):
     if not ('lookup(' in value or 'query(' in value or 'q(' in value):
         return value
 
-    for coll in spec.keys():
-        for plugin_name in get_plugins_from_collection(coll, 'lookup', spec):
+    for coll in spec[namespace].keys():
+        for plugin_name in get_plugins_from_collection(namespace, coll, 'lookup', spec):
             if plugin_name not in value:
                 continue
             value = value.replace(plugin_name, get_plugin_fqcn(namespace, coll, plugin_name))
@@ -976,8 +988,8 @@ def _rewrite_yaml_filter(value, namespace, collection, spec):
     if '|' not in value:
         return value
 
-    for coll in spec.keys():
-        for filter_plugin_name in get_plugins_from_collection(coll, 'filter', spec):
+    for coll in spec[namespace].keys():
+        for filter_plugin_name in get_plugins_from_collection(namespace, coll, 'filter', spec):
             imported_module = import_module('ansible.plugins.filter.' + filter_plugin_name)
             fm = getattr(imported_module, 'FilterModule', None)
             # FIXME import once
@@ -997,8 +1009,8 @@ def _rewrite_yaml_test(value, namespace, collection, spec):
     if ' is ' not in value:
         return value
 
-    for coll in spec.keys():
-        for test_plugin_name in get_plugins_from_collection(coll, 'test', spec):
+    for coll in spec[namespace].keys():
+        for test_plugin_name in get_plugins_from_collection(namespace, coll, 'test', spec):
             imported_module = import_module('ansible.plugins.test.' + test_plugin_name)
             tm = getattr(imported_module, 'TestModule', None)
             # FIXME import once
@@ -1021,10 +1033,8 @@ def _rewrite_yaml_test(value, namespace, collection, spec):
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument('-s', '--spec', '--spec_file', required=True, dest='spec_file',
-                        help='spec YAML file that describes how to organize collections')
-    parser.add_argument('-n', '--ns', '--namespace', dest='namespace', default=COLLECTION_NAMESPACE,
-                        help='target namespace for resulting collections')
+    parser.add_argument('-s', '--spec', required=True, dest='spec_dir',
+                        help='A directory spec with YAML files that describe how to organize collections')
     parser.add_argument('-r', '--refresh', action='store_true', dest='refresh', default=False,
                         help='force refreshing local Ansible checkout')
     parser.add_argument('-t', '--target-dir', dest='vardir', default=VARDIR,
@@ -1035,7 +1045,14 @@ def main():
     args = parser.parse_args()
 
     # required, so we should always have
-    spec = load_spec_file(args.spec_file)
+    spec = {}
+
+    for spec_file in os.listdir(args.spec_dir):
+        try:
+            spec[os.path.splitext(os.path.basename(spec_file))[0]] = load_spec_file(os.path.join(args.spec_dir, spec_file))
+        except Exception as e:
+            # warn we skipped spec_file for reasons: e
+            raise
 
     checkout_repo(args.vardir, args.refresh)
 
