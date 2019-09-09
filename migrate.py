@@ -909,6 +909,7 @@ def _rewrite_yaml_mapping(el, namespace, collection, spec):
     assert isinstance(el, Mapping)
 
     _rewrite_yaml_mapping_keys(el, namespace, collection, spec)
+    _rewrite_yaml_mapping_keys_non_vars(el, namespace, collection, spec)
     _rewrite_yaml_mapping_values(el, namespace, collection, spec)
 
 
@@ -924,21 +925,11 @@ KEYWORD_TO_PLUGIN_MAP = {
 }
 
 
-def _rewrite_yaml_mapping_keys(el, namespace, collection, spec):
+def _rewrite_yaml_mapping_keys_non_vars(el, namespace, collection, spec):
     translate = []
     for key in el.keys():
         if is_reserved_name(key):
             continue
-
-        plugin_type = KEYWORD_TO_PLUGIN_MAP.get(key)
-        if plugin_type:
-            try:
-                plugin_collection = get_plugin_collection(el[key], plugin_type, spec)
-                el[key] = get_plugin_fqcn(namespace, plugin_collection, el[key])
-                integration_tests_add_to_deps(collection, plugin_collection)
-            except LookupError:
-                if '{{' in el[key]:
-                    add_manual_check(key, el[key])
 
         prefix = 'with_'
         if prefix in key:
@@ -971,10 +962,31 @@ def _rewrite_yaml_mapping_keys(el, namespace, collection, spec):
         el[new_key] = el.pop(old_key)
 
 
+def _rewrite_yaml_mapping_keys(el, namespace, collection, spec):
+    for key in el.keys():
+        if is_reserved_name(key):
+            continue
+
+        plugin_type = KEYWORD_TO_PLUGIN_MAP.get(key)
+        if plugin_type is None:
+            continue
+
+        try:
+            plugin_collection = get_plugin_collection(el[key], plugin_type, spec)
+            el[key] = get_plugin_fqcn(namespace, plugin_collection, el[key])
+            integration_tests_add_to_deps(collection, plugin_collection)
+        except LookupError:
+            if '{{' in el[key]:
+                add_manual_check(key, el[key])
+
+
 def _rewrite_yaml_mapping_values(el, namespace, collection, spec):
     for key, value in el.items():
         if isinstance(value, Mapping):
-            _rewrite_yaml_mapping(el[key], namespace, collection, spec)
+            if key == 'vars':
+                _rewrite_yaml_mapping_keys(el[key], namespace, collection, spec)
+            if key != 'vars':
+                _rewrite_yaml_mapping_keys_non_vars(el[key], namespace, collection, spec)
         elif isinstance(value, list):
             for idx, item in enumerate(value):
                 if isinstance(item, Mapping):
