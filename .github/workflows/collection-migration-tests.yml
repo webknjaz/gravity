@@ -24,7 +24,6 @@ jobs:
         # - windows-2016
         migration-scenario:
         - bcs
-        - common
         - newworld
 
     steps:
