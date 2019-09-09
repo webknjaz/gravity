@@ -16,10 +16,21 @@ _core:
     - local.py
     doc_fragments:
     - default_callback.py
+    - decrypt.py
     - files.py
     - shell_common.py
     - url.py
     - validate.py
+    inventory:
+    - advanced_host_list.py
+    - auto.py
+    - constructed.py
+    - generator.py
+    - host_list.py
+    - ini.py
+    - script.py
+    - toml.py
+    - yaml.py
     lookups:
     - fileglob.py
     - first_found.py
@@ -53,11 +64,55 @@ _core:
     - urls.py
     shell:
     - sh.py
+a10:
+    doc_fragments:
+    - a10.py
+    module_utils:
+    - network/a10/*
+    modules:
+    - network/a10/*
+acme:
+    doc_fragments:
+    - acme.py
+    module_utils:
+    - acme.py
+    modules:
+    - crypto/acme/*
+aireos:
+    action:
+    - aireos.py
+    cliconf:
+    - aireos.py
+    doc_fragments:
+    - aireos.py
+    module_utils:
+    - network/aireos/*
+    modules:
+    - network/aireos/*
+    terminal:
+    - aireos.py
+aruba:
+    action:
+    - aruba.py
+    cliconf:
+    - aruba.py
+    doc_fragments:
+    - aruba.py
+    module_utils:
+    - network/aruba/*
+    modules:
+    - network/aruba/*
+    terminal:
+    - aruba.py
 asa:
     action:
     - asa.py
+    cliconf:
+    - asa.py
     doc_fragments:
     - asa.py
+    module_utils:
+    - network/asa/asa.py
     modules:
     - network/asa/*
     terminal:
@@ -67,9 +122,22 @@ avi:
     - avi.py
     lookup:
     - avi.py
+    module_utils:
+    - network/avi/*
     modules:
     - network/avi/*
+cloudstack:
+    doc_fragments:
+    - cloudstack.py
+    module_utils:
+    - cloudstack.py
+    modules:
+    - cloud/cloudstack/*
 eos:
+    action:
+    - eos.py
+    cliconf:
+    - eos.py
     doc_fragments:
     - eos.py
     httpapi:
@@ -84,12 +152,16 @@ eos:
     terminal:
     - eos.py
 frr:
+    cliconf:
+    - frr.py
     modules:
     - network/frr/*
     module_utils:
     - network/frr/*
     - network/frr/*/*/*
     - network/frr/*/*/*/*
+    terminal:
+    - frr.py
 layer2:
     modules:
     - network/layer2/*
@@ -116,6 +188,10 @@ skydive:
     lookups:
     - skydive.py
 vyos:
+    action:
+    - vyos.py
+    cliconf:
+    - vyos.py
     doc_fragments:
     - vyos.py
     modules:
@@ -134,11 +210,18 @@ alicloud:
     module_utils:
     - alicloud_ecs.py
 amazon:
+    action:
+    - aws_s3.py
     doc_fragments:
     - aws.py
     - aws_credentials.py
     - aws_region.py
     - ec2.py
+    callback:
+    - aws_resource_actions.py
+    inventory:
+    - aws_ec2.py
+    - aws_rds.py
     module_utils:
     - ec2.py
     - aws/*
@@ -149,10 +232,118 @@ amazon:
     - aws_secret.py
     - aws_service_ip_ranges.py
     - aws_ssm.py
+cloudscale:
+    doc_fragments:
+    - cloudscale.py
+    inventory:
+    - cloudscale.py
+    module_utils:
+    - cloudscale.py
+    modules:
+    - cloud/cloudscale/*
+cnos:
+    action:
+    - cnos.py
+    cliconf:
+    - cnos.py
+    doc_fragments:
+    - cnos.py
+    module_utils:
+    - network/cnos/*
+    modules:
+    - network/cnos/*
+    terminal:
+    - cnos.py
+dellos:
+    action:
+    - dellos6.py
+    - dellos9.py
+    - dellos10.py
+    cliconf:
+    - dellos6.py
+    - dellos9.py
+    - dellos10.py
+    doc_fragments:
+    - dellos6.py
+    - dellos9.py
+    - dellos10.py
+    module_utils:
+    - network/dellos6/dellos6.py
+    - network/dellos9/dellos9.py
+    - network/dellos10/dellos10.py
+    modules:
+    - network/dellos6/*
+    - network/dellos9/*
+    - network/dellos10/*
+    terminal:
+    - dellos6.py
+    - dellos9.py
+    - dellos10.py
+digital_ocean:
+    doc_fragments:
+    - digital_ocean.py
+    module_utils:
+    - digital_ocean.py
+    modules:
+    - cloud/digital_ocean/*
+dimensiondata:
+    doc_fragments:
+    - dimensiondata.py
+    - dimensiondata_wait.py
+    module_utils:
+    - dimensiondata.py
+    modules:
+    - cloud/dimensiondata/*
+docker:
+    doc_fragments:
+    - docker.py
+    connection:
+    - docker.py
+    inventory:
+    - docker_swarm.py
+    - docker_machine.py
+    module_utils:
+    - docker/common.py
+    - docker/swarm.py
+    modules:
+    - cloud/docker/*
+emc:
+    doc_fragments:
+    - emc.py
+    module_utils:
+    - storage/emc/*
+    modules:
+    - storage/emc/*
+enos:
+    action:
+    - enos.py
+    cliconf:
+    - enos.py
+    doc_fragments:
+    - enos.py
+    modules:
+    - network/enos/*
+    terminal:
+    - enos.py
+exoscale:
+    doc_fragments:
+    - exoscale.py
+    module_utils:
+    - exoscale.py
+    modules:
+    - net_tools/exoscale/*
+gitlab:
+    modules:
+    - source_control/_gitlab_hooks.py
+    - source_control/gitlab_*
 vmware:
+    connection:
+    - vmware_tools.py
     doc_fragments:
     - vmware.py
     - vmware_rest_client.py
+    inventory:
+    - vmware_vm_inventory.py
     modules:
     - cloud/vmware/*
     module_utils:
@@ -162,10 +353,12 @@ vmware:
 vultr:
     doc_fragments:
     - vultr.py
-    modules:
-    - cloud/vultr/*
+    inventory:
+    - vultr.py
     module_utils:
     - vultr.py
+    modules:
+    - cloud/vultr/*
 misc:
     become:
     - dzdo.py
@@ -173,24 +366,7 @@ misc:
     - pmrun.py
     - sesu.py
     doc_fragments:
-    - acme.py
-    - aireos.py
-    - aruba.py
     - auth_basic.py
-    - ce.py
-    - cloudscale.py
-    - cnos.py
-    - decrypt.py
-    - default_callback.py
-    - dellos*.py
-    - digital_ocean.py
-    - dimensiondata.py
-    - dimensiondata_wait.py
-    - docker.py
-    - emc.py
-    - enos.py
-    - exoscale.py
-    - files.py
     - fortios.py
     - hcloud.py
     - hetzner.py
@@ -223,8 +399,6 @@ misc:
     - openstack.py
     - oracle.py
     - oracle_*.py
-    - ovirt.py
-    - ovirt_facts.py
     - panos.py
     - postgres.py
     - proxysql.py
@@ -236,7 +410,6 @@ misc:
     - template_common.py
     - ucs.py
     - utm.py
-    - vca.py
     - vca.py
     - vexata.py
     - xenserver.py
@@ -275,14 +448,7 @@ misc:
     - timer.py
     - unixy.py
     - yaml.py
-    doc_fragments:
-    - a10.py
-    - acme.py
-    - cloudstack.py
-    - digital_ocean.py
-    - docker.py
     connection:
-    - docker.py
     - buildah.py
     - lxc.py
     - lxd.py
@@ -330,11 +496,6 @@ misc:
     modules:
     - cloud/atomic/*
     - cloud/centurylink/*
-    - cloud/cloudscale/*
-    - cloud/cloudstack/*
-    - cloud/digital_ocean/*
-    - cloud/dimensiondata/*
-    - cloud/docker/*
     - cloud/hcloud/*
     - cloud/heroku/heroku_collaborator.py
     - cloud/huawei/hwc_network_vpc.py
@@ -374,7 +535,6 @@ misc:
     - commands/expect.py
     - commands/psexec.py
     - commands/telnet.py
-    - crypto/acme/*
     - crypto/certificate_complete_chain.py
     - crypto/get_certificate.py
     - crypto/luks_device.py
@@ -432,8 +592,6 @@ misc:
     - net_tools/cloudflare_dns.py
     - net_tools/dnsimple.py
     - net_tools/dnsmadeeasy.py
-    - net_tools/exoscale/exo_dns_domain.py
-    - net_tools/exoscale/exo_dns_record.py
     - net_tools/haproxy.py
     - net_tools/hetzner_failover_ip.py
     - net_tools/hetzner_failover_ip_info.py
@@ -448,26 +606,16 @@ misc:
     - net_tools/nsupdate.py
     - net_tools/omapi_host.py
     - net_tools/snmp_facts.py
-    - network/a10/*
-    - network/aireos/aireos_command.py
-    - network/aireos/aireos_config.py
     - network/aos/*
-    - network/aruba/aruba_command.py
-    - network/aruba/aruba_config.py
     - network/bigswitch/bcf_switch.py
     - network/bigswitch/bigmon_chain.py
     - network/bigswitch/bigmon_policy.py
     - network/citrix/_netscaler.py
     - network/cloudengine/*
-    - network/cnos/*
     - network/cumulus/*
-    - network/dellos10/*
-    - network/dellos6/*
-    - network/dellos9/*
     - network/edgeos/*
     - network/edgeswitch/edgeswitch_facts.py
     - network/edgeswitch/edgeswitch_vlan.py
-    - network/enos/*
     - network/eric_eccli/eric_eccli_command.py
     - network/exos/*
     - network/fortimanager/*
@@ -617,14 +765,11 @@ misc:
     - remote_management/wakeonlan.py
     - source_control/_github_hooks.py
     - source_control/_github_webhook_facts.py
-    - source_control/_gitlab_hooks.py
     - source_control/bitbucket/*
     - source_control/bzr.py
     - source_control/git_config.py
     - source_control/github_*
-    - source_control/gitlab_*
     - source_control/hg.py
-    - storage/emc/emc_vnx_sg_member.py
     - storage/glusterfs/_gluster_heal_facts.py
     - storage/glusterfs/gluster_heal_info.py
     - storage/glusterfs/gluster_peer.py
@@ -702,16 +847,9 @@ misc:
     - web_infrastructure/supervisorctl.py
     - web_infrastructure/taiga_issue.py
     module_utils:
-    - acme.py
     - cloud.py
-    - cloudstack.py
     - crypto.py
     - database.py
-    - dimensiondata.py
-    - digital_ocean.py
-    - docker/common.py
-    - docker/swarm.py
-    - exoscale.py
     - linode.py
     - lxd.py
     - mysql.py
@@ -734,17 +872,12 @@ misc:
     - scaleway.py
     - service_now.py
     - source_control/bitbucket.py
-    - storage/emc/*
     - storage/hpe3par/*
     - univention_umc.py
     - utm_utils.py
     - vca.py
     - vexata.py
     - xenserver.py
-    terminal:
-    - dellos10.py
-    - dellos6.py
-    - dellos9.py
 network:
     action:
     - telnet.py
@@ -754,9 +887,10 @@ network:
     - network_cli.py
     - httpapi.py
     doc_fragments:
-    - aireos.py
-    - aruba.py
+    - ce.py
     - network_agnostic.py
+    filter:
+    - network.py
     httpapi:
     - exos.py
     - fortimanager.py
@@ -766,8 +900,8 @@ network:
     - qradar.py
     - restconf.py
     - splunk.py
-    filter:
-    - network.py
+    inventory:
+    - nmap.py
     modules:
     - network/cli/cli_command.py
     - network/cli/cli_config.py
@@ -789,16 +923,11 @@ network:
     - default.py
     - sros.py
     terminal:
-    - aireos.py
-    - aruba.py
     - ce.py
-    - cnos.py
     - edgeos.py
     - edgeswitch.py
-    - enos.py
     - eric_eccli.py
     - exos.py
-    - frr.py
     - icx.py
     - ios.py
     - ironware.py
@@ -812,6 +941,8 @@ network:
     - voss.py
 tower:
     doc_fragments:
+    - tower.py
+    inventory:
     - tower.py
     modules:
     - web_infrastructure/ansible_tower/*
