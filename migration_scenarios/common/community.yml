@@ -235,7 +235,7 @@ vultr:
 #kbevirt:
 #k8s:
 #openshift:
-community:
+misc:
     action:
     - telnet.py
     become:
