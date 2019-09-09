@@ -5,11 +5,13 @@
 import argparse
 import configparser
 import glob
+import itertools
 import os
 import re
 import shutil
 import subprocess
 import sys
+import textwrap
 import yaml
 
 from collections import defaultdict
@@ -231,9 +233,12 @@ def rewrite_doc_fragments(mod_fst, collection, spec, namespace):
 def rewrite_imports(mod_fst, collection, spec, namespace):
     """Rewrite imports map."""
     plugins_path = ('ansible_collections', namespace, collection, 'plugins')
+    tests_path = ('ansible_collections', namespace, collection, 'tests')
+    unit_tests_path = tests_path + ('unit', )
     import_map = {
         ('ansible', 'module_utils'): plugins_path + ('module_utils', ),
         ('ansible', 'plugins'): plugins_path,
+        ('units', ): unit_tests_path,
     }
 
     return rewrite_imports_in_fst(mod_fst, import_map, collection, spec)
@@ -269,7 +274,10 @@ def rewrite_imports_in_fst(mod_fst, import_map, collection, spec):
         if len(imp.find_all('name_as_name', value='g:*loader*')) > 0:
             continue  # Skip imports of ansible.plugin.loader.py
 
-        if imp_src[1].value == 'module_utils':
+        if imp_src[0].value == 'units':
+            imp_src[:token_length] = exchange  # replace the import
+            continue
+        elif imp_src[1].value == 'module_utils':
             plugin_type = 'module_utils'
             plugin_name = '/'.join(t.value for t in imp_src[token_length:])
             if not plugin_name:
@@ -319,6 +327,34 @@ def read_module_txt_n_fst(path):
         logger.exception('failed parsing on %s', mod_src_text)
         raise
 
+
+def inject_init_into_tree(target_dir):
+    for initpath in (
+            os.path.join(dp, '__init__.py')
+            for dp, dn, fn in os.walk(target_dir)
+            if '__init__.py' not in fn
+            # and any(f.endwith('.py') for f in fn)
+    ):
+        write_text_into_file(initpath, '')
+
+
+def inject_fqcn_loader_into_contest(collection_dir):
+    os.makedirs(os.path.join(collection_dir, 'tests'), exist_ok=True)
+    write_text_into_file(
+        os.path.join(collection_dir, 'tests', 'conftest.py'),
+        textwrap.dedent('''
+        """Configuration to allow FQCN imports in conftest modules."""
+
+        import sys
+
+        from ansible.utils.collection_loader import AnsibleCollectionLoader
+
+
+        sys.meta_path.insert(0, AnsibleCollectionLoader())
+        ''').lstrip('\n'),
+    )
+
+
 def copy_unit_tests(checkout_path, collection_dir, plugin_type, plugin, spec):
     """Find all unit tests and related artifacts for the given plugin.
 
@@ -330,11 +366,16 @@ def copy_unit_tests(checkout_path, collection_dir, plugin_type, plugin, spec):
         else os.path.join('plugins', plugin_type)
     )
 
-    # Narrow down the search area
-    type_base_subdir = os.path.join(
+    unit_tests_root = os.path.join(
         checkout_path, 'test', 'units',
-        type_subdir,
     )
+
+    collection_unit_tests_root = os.path.join(
+        collection_dir, 'tests', 'unit',
+    )
+
+    # Narrow down the search area
+    type_base_subdir = os.path.join(unit_tests_root, type_subdir)
 
     # Find all test modules with the same ending as the current plugin
     plugin_dir, plugin_mod = os.path.split(plugin)
@@ -345,10 +386,21 @@ def copy_unit_tests(checkout_path, collection_dir, plugin_type, plugin, spec):
 
     # Figure out what to copy and where
     copy_map = defaultdict(lambda: defaultdict(set))
+
+    # Inject unit test helper packages
+    copy_map[unit_tests_root]['to'] = collection_unit_tests_root
+
+    for hd in {'compat', 'mock'}:
+        copy_map[unit_tests_root]['dirs'].add(hd)
+
+    copy_map[os.path.join(unit_tests_root, 'modules')]['to'] = os.path.join(collection_unit_tests_root, 'modules')
+    copy_map[os.path.join(unit_tests_root, 'modules')]['files'].add('utils.py')
+
+    # Add test modules along with related artifacts
     for td, tm in (os.path.split(p) for p in matching_test_modules):
         copy_map[td]['files'].add(tm)
         copy_map[td]['to'] = os.path.join(
-            collection_dir, 'test', 'unit',
+            collection_unit_tests_root,
             plugin_type, plugin_dir,
         )
         # Add subdirs that may contain related test artifacts/fixtures
@@ -538,6 +590,18 @@ def assemble_collections(spec, args):
                         checkout_path, collection_dir,
                         plugin_type, plugin, spec,
                     )
+                    inject_init_into_tree(
+                        os.path.join(collection_dir, 'tests', 'unit'),
+                    )
+                    for file_path in itertools.chain.from_iterable(
+                            (os.path.join(dp, f) for f in fn if f.endswith('.py'))
+                            for dp, dn, fn in os.walk(os.path.join(collection_dir, 'tests', 'unit'))
+                    ):
+                        _unit_test_module_src_text, unit_test_module_fst = read_module_txt_n_fst(file_path)
+                        import_dependencies += rewrite_imports(unit_test_module_fst, collection, spec, namespace)
+                        write_text_into_file(file_path, unit_test_module_fst.dumps())
+
+            inject_fqcn_loader_into_contest(collection_dir)
 
             # FIXME need to hack PyYAML to preserve formatting (not how much it's possible or how much it is work) or use e.g. ruamel.yaml
             try:
