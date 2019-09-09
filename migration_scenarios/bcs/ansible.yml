@@ -1,0 +1,62 @@
+_core:
+    action:
+    - normal.py
+    - copy.py
+    - package.py
+    - service.py
+    - reboot.py
+    - template.py
+    callback:
+    - default.py
+    - minimal.py
+    - oneline.py
+    - tree.py
+    connection:
+    - ssh.py
+    - local.py
+    doc_fragments:
+    - default_callback.py
+    - files.py
+    - shell_common.py
+    - url.py
+    - validate.py
+    lookups:
+    - fileglob.py
+    - first_found.py
+    - inventory_hostnames.py
+    - items.py
+    - link.py
+    - nested.py
+    - sequence.py
+    - subelements.py
+    - together.py
+    module_utils:
+    - _text.py
+    - ansible_release.py
+    - api.py
+    - basic.py
+    - connection.py
+    - common.py
+    - common/*
+    - common/text/*
+    - facts.py
+    - facts/packages.py
+    - facts/system/service_mgr.py
+    - facts/utils.py
+    - json_utils.py
+    - parsing/convert_bool.py
+    - service.py
+    - six.py
+    - six/*
+    - six/moves/*
+    - six/moves/urllib/*
+    - urls.py
+    shell:
+    - sh.py
+tower:
+    doc_fragments:
+    - tower.py
+    modules:
+    - web_infrastructure/ansible_tower/*
+    module_utils:
+    - ansible_tower.py

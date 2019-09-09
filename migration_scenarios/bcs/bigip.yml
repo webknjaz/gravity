@@ -1,0 +1,9 @@
+bigip:
+    doc_fragments:
+    - f5.py
+    modules:
+    - network/f5/*
+    module_utils:
+    - network/f5/*
+    terminal:
+    - bigip.py

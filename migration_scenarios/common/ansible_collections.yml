@@ -1,3 +1,76 @@
+_core:
+    action:
+    - normal.py
+    - copy.py
+    - package.py
+    - service.py
+    - reboot.py
+    - template.py
+    callback:
+    - default.py
+    - minimal.py
+    - oneline.py
+    - tree.py
+    connection:
+    - ssh.py
+    - local.py
+    doc_fragments:
+    - default_callback.py
+    - files.py
+    - shell_common.py
+    - url.py
+    - validate.py
+    lookups:
+    - fileglob.py
+    - first_found.py
+    - inventory_hostnames.py
+    - items.py
+    - link.py
+    - nested.py
+    - sequence.py
+    - subelements.py
+    - together.py
+    module_utils:
+    - _text.py
+    - ansible_release.py
+    - api.py
+    - basic.py
+    - connection.py
+    - common.py
+    - common/*
+    - common/text/*
+    - facts.py
+    - facts/packages.py
+    - facts/system/service_mgr.py
+    - facts/utils.py
+    - json_utils.py
+    - parsing/convert_bool.py
+    - service.py
+    - six.py
+    - six/*
+    - six/moves/*
+    - six/moves/urllib/*
+    - urls.py
+    shell:
+    - sh.py
+bigip:
+    doc_fragments:
+    - f5.py
+    modules:
+    - network/f5/*
+    module_utils:
+    - network/f5/*
+    terminal:
+    - bigip.py
+checkpoint:
+    httpapi:
+    - checkpoint.py
+    doc_fragments:
+    - checkpoint_*.py
+    modules:
+    - network/checkpoint/*
+    module_utils:
+    - network/checkpoint/*
 eos:
     doc_fragments:
     - eos.py
@@ -19,6 +92,30 @@ frr:
     - network/frr/*
     - network/frr/*/*/*
     - network/frr/*/*/*/*
+ios:
+    doc_fragments:
+    - ios.py
+    modules:
+    - network/ios/*
+    module_utils:
+    - network/ios/*
+    - network/ios/*/*
+    - network/ios/*/*/*
+    - network/ios/*/*/*/*
+#iosxr:
+junos:
+    doc_fragments:
+    - junos.py
+    netconf:
+    - junos.py
+    terminal:
+    - junos.py
+    modules:
+    - network/junos/*
+    module_utils:
+    - network/junos/*
+    - network/junos/*/*
+    - network/junos/*/*/*
 layer2:
     modules:
     - network/layer2/*
@@ -32,6 +129,15 @@ nso:
     - network/nso/*
     module_utils:
     - network/nso/nso.py
+nxos:
+    doc_fragments:
+    - nxos.py
+    modules:
+    - network/nxos/*
+    module_utils:
+    - network/nxos/*
+    - network/nxos/*/*
+    - network/nxos/*/*/*
 ovs:
     modules:
     - network/ovs/*
@@ -44,6 +150,13 @@ skydive:
     - network/skydive/*
     lookups:
     - skydive.py
+sros:
+    doc_fragments:
+    - sros.py
+    modules:
+    - network/sros/*
+    module_utils:
+    - network/sros/sros.py
 vyos:
     doc_fragments:
     - vyos.py
@@ -55,6 +168,8 @@ vyos:
     - network/vyos/*/*/*
     terminal:
     - vyos.py
+#nios:
+#cyberark:
 alicloud:
     doc_fragments:
     - alicloud.py
@@ -78,6 +193,26 @@ amazon:
     - aws_secret.py
     - aws_service_ip_ranges.py
     - aws_ssm.py
+azure:
+    doc_fragments:
+    - azure.py
+    - azure_tags.py
+    modules:
+    - cloud/azure/*
+    module_utils:
+    - azure_rm_common.py
+    - azure_rm_common_ext.py
+    - azure_rm_common_rest.py
+google:
+    doc_fragments:
+    - gcp.py
+    modules:
+    - cloud/google/*
+    module_utils:
+    - gcdns.py
+    - gce.py
+    - gcp.py
+    - gcp_utils.py
 vmware:
     doc_fragments:
     - vmware.py
@@ -734,6 +869,7 @@ network:
     netconf:
     - ce.py
     - default.py
+    - iosxr.py
     - sros.py
     terminal:
     - aireos.py
@@ -749,6 +885,7 @@ network:
     - frr.py
     - icx.py
     - ios.py
+    - iosxr.py
     - ironware.py
     - netvisor.py
     - nos.py
@@ -844,3 +981,10 @@ windows:
     shell:
     - cmd.py
     - powershell.py
+tower:
+    doc_fragments:
+    - tower.py
+    modules:
+    - web_infrastructure/ansible_tower/*
+    module_utils:
+    - ansible_tower.py
