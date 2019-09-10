@@ -332,10 +332,30 @@ exoscale:
     - exoscale.py
     modules:
     - net_tools/exoscale/*
+fortios:
+    action:
+    - fortios_config.py
+    doc_fragments:
+    - fortios.py
+    httpapi:
+    - fortios.py
+    module_utils:
+    - network/fortios/*
+    modules:
+    - network/fortios/*
 gitlab:
     modules:
     - source_control/_gitlab_hooks.py
     - source_control/gitlab_*
+hcloud:
+    doc_fragments:
+    - hcloud.py
+    inventory:
+    - hcloud.py
+    module_utils:
+    - hcloud.py
+    modules:
+    - cloud/hcloud/*
 vmware:
     connection:
     - vmware_tools.py
@@ -367,17 +387,14 @@ misc:
     - sesu.py
     doc_fragments:
     - auth_basic.py
-    - fortios.py
-    - hcloud.py
     - hetzner.py
     - hpe3par.py
-    - hwc.py
     - ibm_storage.py
     - infinibox.py
     - influxdb.py
     - ingate.py
     - intersight.py
-    - ipa.documentation.py
+    - ipa.py
     - ironware.py
     - k8s_*.py
     - keycloak.py
@@ -488,7 +505,7 @@ misc:
     - password.py
     - passwordstore.py
     - rabbitmq.py
-    - random_choice.py
+    - random_choiCe.py
     - redis.py
     filter:
     - json_query.py
@@ -496,10 +513,7 @@ misc:
     modules:
     - cloud/atomic/*
     - cloud/centurylink/*
-    - cloud/hcloud/*
     - cloud/heroku/heroku_collaborator.py
-    - cloud/huawei/hwc_network_vpc.py
-    - cloud/huawei/hwc_smn_topic.py
     - cloud/kubevirt/*
     - cloud/linode/*
     - cloud/lx?/*
@@ -611,7 +625,6 @@ misc:
     - network/bigswitch/bigmon_chain.py
     - network/bigswitch/bigmon_policy.py
     - network/citrix/_netscaler.py
-    - network/cloudengine/*
     - network/cumulus/*
     - network/edgeos/*
     - network/edgeswitch/edgeswitch_facts.py
@@ -619,7 +632,6 @@ misc:
     - network/eric_eccli/eric_eccli_command.py
     - network/exos/*
     - network/fortimanager/*
-    - network/fortios/*
     - network/ftd/ftd_configuration.py
     - network/ftd/ftd_file_download.py
     - network/ftd/ftd_file_upload.py
@@ -887,14 +899,12 @@ network:
     - network_cli.py
     - httpapi.py
     doc_fragments:
-    - ce.py
     - network_agnostic.py
     filter:
     - network.py
     httpapi:
     - exos.py
     - fortimanager.py
-    - fortios.py
     - ftd.py
     - nxos.py
     - qradar.py
@@ -919,11 +929,9 @@ network:
     - network/common/*
     - network/common/*/*
     netconf:
-    - ce.py
     - default.py
     - sros.py
     terminal:
-    - ce.py
     - edgeos.py
     - edgeswitch.py
     - eric_eccli.py
