@@ -91,6 +91,36 @@ aireos:
     - network/aireos/*
     terminal:
     - aireos.py
+alicloud:
+    doc_fragments:
+    - alicloud.py
+    modules:
+    - cloud/alicloud/*
+    module_utils:
+    - alicloud_ecs.py
+amazon:
+    action:
+    - aws_s3.py
+    doc_fragments:
+    - aws.py
+    - aws_credentials.py
+    - aws_region.py
+    - ec2.py
+    callback:
+    - aws_resource_actions.py
+    inventory:
+    - aws_ec2.py
+    - aws_rds.py
+    module_utils:
+    - ec2.py
+    - aws/*
+    modules:
+    - cloud/amazon/*
+    lookups:
+    - aws_account_attribute.py
+    - aws_secret.py
+    - aws_service_ip_ranges.py
+    - aws_ssm.py
 aruba:
     action:
     - aruba.py
@@ -133,105 +163,6 @@ cloudstack:
     - cloudstack.py
     modules:
     - cloud/cloudstack/*
-eos:
-    action:
-    - eos.py
-    cliconf:
-    - eos.py
-    doc_fragments:
-    - eos.py
-    httpapi:
-    - eos.py
-    modules:
-    - network/eos/*
-    module_utils:
-    - network/eos/*
-    - network/eos/*/*
-    - network/eos/*/*/*
-    - network/eos/*/*/*/*
-    terminal:
-    - eos.py
-frr:
-    cliconf:
-    - frr.py
-    modules:
-    - network/frr/*
-    module_utils:
-    - network/frr/*
-    - network/frr/*/*/*
-    - network/frr/*/*/*/*
-    terminal:
-    - frr.py
-layer2:
-    modules:
-    - network/layer2/*
-layer3:
-    modules:
-    - network/layer3/*
-nso:
-    doc_fragments:
-    - nso.py
-    modules:
-    - network/nso/*
-    module_utils:
-    - network/nso/nso.py
-ovs:
-    modules:
-    - network/ovs/*
-skydive:
-    doc_fragments:
-    - skydive.py
-    modules:
-    - network/skydive/*
-    module_utils:
-    - network/skydive/*
-    lookups:
-    - skydive.py
-vyos:
-    action:
-    - vyos.py
-    cliconf:
-    - vyos.py
-    doc_fragments:
-    - vyos.py
-    modules:
-    - network/vyos/*
-    module_utils:
-    - network/vyos/*
-    - network/vyos/*/*
-    - network/vyos/*/*/*
-    terminal:
-    - vyos.py
-alicloud:
-    doc_fragments:
-    - alicloud.py
-    modules:
-    - cloud/alicloud/*
-    module_utils:
-    - alicloud_ecs.py
-amazon:
-    action:
-    - aws_s3.py
-    doc_fragments:
-    - aws.py
-    - aws_credentials.py
-    - aws_region.py
-    - ec2.py
-    callback:
-    - aws_resource_actions.py
-    inventory:
-    - aws_ec2.py
-    - aws_rds.py
-    module_utils:
-    - ec2.py
-    - aws/*
-    modules:
-    - cloud/amazon/*
-    lookups:
-    - aws_account_attribute.py
-    - aws_secret.py
-    - aws_service_ip_ranges.py
-    - aws_ssm.py
 cloudscale:
     doc_fragments:
     - cloudscale.py
@@ -332,6 +263,35 @@ exoscale:
     - exoscale.py
     modules:
     - net_tools/exoscale/*
+eos:
+    action:
+    - eos.py
+    cliconf:
+    - eos.py
+    doc_fragments:
+    - eos.py
+    httpapi:
+    - eos.py
+    modules:
+    - network/eos/*
+    module_utils:
+    - network/eos/*
+    - network/eos/*/*
+    - network/eos/*/*/*
+    - network/eos/*/*/*/*
+    terminal:
+    - eos.py
+frr:
+    cliconf:
+    - frr.py
+    modules:
+    - network/frr/*
+    module_utils:
+    - network/frr/*
+    - network/frr/*/*/*
+    - network/frr/*/*/*/*
+    terminal:
+    - frr.py
 fortios:
     action:
     - fortios_config.py
@@ -347,38 +307,24 @@ gitlab:
     modules:
     - source_control/_gitlab_hooks.py
     - source_control/gitlab_*
-hcloud:
+hetzner:
     doc_fragments:
     - hcloud.py
+    - hetzner.py
     inventory:
     - hcloud.py
     module_utils:
     - hcloud.py
+    - hetzner.py
     modules:
     - cloud/hcloud/*
-vmware:
-    connection:
-    - vmware_tools.py
-    doc_fragments:
-    - vmware.py
-    - vmware_rest_client.py
-    inventory:
-    - vmware_vm_inventory.py
+    - net_tools/hetzner_*
+layer2:
     modules:
-    - cloud/vmware/*
-    module_utils:
-    - vmware.py
-    - vmware_rest_client.py
-    - vmware_spbm.py
-vultr:
-    doc_fragments:
-    - vultr.py
-    inventory:
-    - vultr.py
-    module_utils:
-    - vultr.py
+    - network/layer2/*
+layer3:
     modules:
-    - cloud/vultr/*
+    - network/layer3/*
 misc:
     become:
     - dzdo.py
@@ -387,7 +333,6 @@ misc:
     - sesu.py
     doc_fragments:
     - auth_basic.py
-    - hetzner.py
     - hpe3par.py
     - ibm_storage.py
     - infinibox.py
@@ -946,6 +891,25 @@ network:
     - slxos.py
     - sros.py
     - voss.py
+nso:
+    doc_fragments:
+    - nso.py
+    modules:
+    - network/nso/*
+    module_utils:
+    - network/nso/nso.py
+ovs:
+    modules:
+    - network/ovs/*
+skydive:
+    doc_fragments:
+    - skydive.py
+    modules:
+    - network/skydive/*
+    module_utils:
+    - network/skydive/*
+    lookups:
+    - skydive.py
 tower:
     doc_fragments:
     - tower.py
@@ -1026,6 +990,44 @@ unix:
     shell:
     - csh.py
     - fish.py
+vmware:
+    connection:
+    - vmware_tools.py
+    doc_fragments:
+    - vmware.py
+    - vmware_rest_client.py
+    inventory:
+    - vmware_vm_inventory.py
+    modules:
+    - cloud/vmware/*
+    module_utils:
+    - vmware.py
+    - vmware_rest_client.py
+    - vmware_spbm.py
+vultr:
+    doc_fragments:
+    - vultr.py
+    inventory:
+    - vultr.py
+    module_utils:
+    - vultr.py
+    modules:
+    - cloud/vultr/*
+vyos:
+    action:
+    - vyos.py
+    cliconf:
+    - vyos.py
+    doc_fragments:
+    - vyos.py
+    modules:
+    - network/vyos/*
+    module_utils:
+    - network/vyos/*
+    - network/vyos/*/*
+    - network/vyos/*/*/*
+    terminal:
+    - vyos.py
 windows:
     action:
     - win_*
