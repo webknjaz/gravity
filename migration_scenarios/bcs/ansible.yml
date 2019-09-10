@@ -433,7 +433,6 @@ misc:
     - zabbix.py
     callback:
     - actionable.py
-    - aws_resource_actions.py
     - context_demo.py
     - counter_enabled.py
     - debug.py
