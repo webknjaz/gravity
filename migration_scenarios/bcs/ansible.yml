@@ -504,7 +504,7 @@ misc:
     - password.py
     - passwordstore.py
     - rabbitmq.py
-    - random_choiCe.py
+    - random_choice.py
     - redis.py
     filter:
     - json_query.py
